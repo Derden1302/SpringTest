@@ -1,0 +1,11 @@
+version: '3.7'
+services:
+  java_postgres:
+    image: postgres:14
+    environment:
+      POSTGRES_USER: postgres
+      PGUSER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '5432:5432'
