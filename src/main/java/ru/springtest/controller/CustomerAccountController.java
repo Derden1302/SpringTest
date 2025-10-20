@@ -27,13 +27,13 @@ public class CustomerAccountController {
         return ResponseEntity.ok(customersAccountsService.updateWithAccount(dto));
     }
 
-    @GetMapping("/get-by-id")
-    public ResponseEntity<CustomerAccountResponseDto> getWithId(UUID id) {
+    @GetMapping("/get-by-id/{id}")
+    public ResponseEntity<CustomerAccountResponseDto> getWithId(@PathVariable UUID id) {
         return ResponseEntity.ok(customersAccountsService.getById(id));
     }
 
-    @DeleteMapping("/delete-by-id")
-    public void deleteById(UUID id) {
+    @DeleteMapping("/delete-by-id/{id}")
+    public void deleteById(@PathVariable UUID id) {
         customersAccountsService.delete(id);
     }
 

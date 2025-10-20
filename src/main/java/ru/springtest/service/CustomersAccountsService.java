@@ -1,8 +1,5 @@
 package ru.springtest.service;
 
-import org.springframework.transaction.annotation.Transactional;
-import ru.springtest.domain.Accounts;
-import ru.springtest.domain.Customers;
 import ru.springtest.dto.CustomerAccountCreateUpdateDto;
 import ru.springtest.dto.CustomerAccountResponseDto;
 

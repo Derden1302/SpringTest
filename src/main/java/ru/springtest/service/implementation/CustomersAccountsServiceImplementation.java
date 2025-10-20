@@ -24,36 +24,30 @@ public class CustomersAccountsServiceImplementation implements CustomersAccounts
     @Transactional
     @Override
     public CustomerAccountResponseDto createWithAccount(CustomerAccountCreateUpdateDto dto) {
-        Customers customer = new Customers();
-        customer.setCustomerName(dto.customerName());
-        Customers saved = customersRepository.save(customer);
-        Accounts accounts = new Accounts();
-        accounts.setAccountData(dto.accountData());
-        accounts.setCustomer(saved);
-        accountsRepository.save(accounts);
-        return mapper.toDto(saved, accounts.getAccountData());
+        Customers customers = customersRepository.save(mapper.createCustomer(dto));
+        Accounts accounts = accountsRepository.save(mapper.createAccount(dto, customers));
+        return mapper.toDto(customers, accounts);
     }
 
-
-    @Override
     @Transactional
+    @Override
     public CustomerAccountResponseDto getById(UUID id) {
         Customers customer = customersRepository.findById(id).orElse(null);
         return mapper.toDto(
                 customer,
-                accountsRepository.findAccountsByCustomerId(id).getAccountData());
+                accountsRepository.findAccountsByCustomerId(id));
     }
 
     @Override
     @Transactional
     public CustomerAccountResponseDto updateWithAccount(CustomerAccountCreateUpdateDto dto) {
-        Customers customer = customersRepository.findByCustomerName(dto.customerName());
-        customer.setCustomerName(dto.customerName());
+        Customers customer = customersRepository.findByName(dto.name());
+        mapper.updateCustomer(customer, dto);
         customersRepository.save(customer);
         Accounts accounts = accountsRepository.findAccountsByCustomerId(customer.getId());
-        accounts.setAccountData(dto.accountData());
+        mapper.updateAccount(accounts, dto);
         accountsRepository.save(accounts);
-        return mapper.toDto(customer,accounts.getAccountData());
+        return mapper.toDto(customer,accounts);
     }
 
     @Override
@@ -61,4 +55,5 @@ public class CustomersAccountsServiceImplementation implements CustomersAccounts
     public void delete(UUID id) {
         customersRepository.deleteById(id);
     }
+
 }

@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Data
@@ -13,12 +12,10 @@ public class ContractHistory {
     @EmbeddedId
     private ContractHistoryId id;
 
-
     @ManyToOne
     @MapsId("contractId")
     @JoinColumn(name="contract_id")
     private Contracts contract;
-
 
     @ManyToOne
     @MapsId("historyId")
@@ -27,4 +24,5 @@ public class ContractHistory {
 
     @Column(name= "event_date")
     private LocalDateTime eventDate;
+
 }

@@ -4,11 +4,10 @@ import jakarta.validation.constraints.NotBlank;
 
 import java.util.UUID;
 
-public record CustomerAccountCreateUpdateDto(
+public record ItemCreateUpdateDto(
+        @NotBlank(message = "Айди отсутствует")
+        UUID sellerId,
         @NotBlank(message = "Имя отсутствует")
-        String name,
-        @NotBlank(message = "Данные отсутствуют")
-        String accountData
+        String name
 ) {
-
 }

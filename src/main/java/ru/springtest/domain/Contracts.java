@@ -20,5 +20,5 @@ public class Contracts {
     private String name;
 
     @OneToMany(mappedBy = "contract")
-    private Set<ContractHistory> contractHistories = new HashSet<>();
+    private Set<ContractHistory> contractHistories;
 }

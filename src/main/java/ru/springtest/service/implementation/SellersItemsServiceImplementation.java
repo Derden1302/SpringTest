@@ -5,9 +5,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.springtest.domain.Items;
 import ru.springtest.domain.Sellers;
-import ru.springtest.dto.ItemCreateDto;
-import ru.springtest.dto.ItemsDto;
-import ru.springtest.dto.SellerDto;
+import ru.springtest.dto.ItemCreateUpdateDto;
+import ru.springtest.dto.SellerCreateUpdateDto;
 import ru.springtest.dto.SellersItemsResponseDto;
 import ru.springtest.mapper.SellersItemsMapper;
 import ru.springtest.repository.ItemsRepository;
@@ -19,37 +18,43 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class SellersItemsServiceImplementation implements SellersItemsService {
     private final SellersRepository sellersRepository;
     private final ItemsRepository itemsRepository;
     private final SellersItemsMapper mapper;
 
+    @Transactional
     @Override
-    public Sellers createSeller(SellerDto dto) {
-        Sellers seller = new Sellers();
-        seller.setName(dto.sellerName());
+    public Sellers createSeller(SellerCreateUpdateDto dto) {
+        Sellers seller = mapper.createSeller(dto);
         return sellersRepository.save(seller);
     }
 
+    @Transactional
     @Override
-    public Items createItem(ItemCreateDto dto) {
-        Items item = new Items();
-        item.setName(dto.name());
-        item.setSeller(sellersRepository.findById(dto.sellerId()).orElseThrow(() -> new RuntimeException("Seller not found!")));
+    public Items createItem(ItemCreateUpdateDto dto) {
+        Sellers seller = sellersRepository.findById(dto.sellerId()).orElseThrow(() -> new RuntimeException("Seller not found!"));
+        Items item = mapper.createItem(dto, seller);
         return itemsRepository.save(item);
     }
 
+    @Transactional
     @Override
-    public Sellers updateSeller(Sellers sellers) {
-        return sellersRepository.save(sellers);
+    public Sellers updateSeller(UUID id, SellerCreateUpdateDto dto) {
+        Sellers seller = sellersRepository.findById(id).orElseThrow(() -> new RuntimeException("Seller not found!"));
+        mapper.updateSeller(seller, dto);
+        return sellersRepository.save(seller);
     }
 
+    @Transactional
     @Override
-    public Items updateItem(Items items) {
-        return itemsRepository.save(items);
+    public Items updateItem(UUID id, ItemCreateUpdateDto dto) {
+        Items item = itemsRepository.findById(id).orElseThrow(() -> new RuntimeException("Item not found!"));
+        mapper.updateItem(item, dto);
+        return itemsRepository.save(item);
     }
 
+    @Transactional
     @Override
     public SellersItemsResponseDto getSellersItemsBySellerId(UUID sellerId) {
         Sellers sellers = sellersRepository.findById(sellerId).orElseThrow(() -> new RuntimeException("Seller not found!"));
@@ -57,6 +62,7 @@ public class SellersItemsServiceImplementation implements SellersItemsService {
         return mapper.toDto(sellers, itemsList);
     }
 
+    @Transactional
     @Override
     public void deleteSeller(UUID sellerId) {
         sellersRepository.deleteById(sellerId);

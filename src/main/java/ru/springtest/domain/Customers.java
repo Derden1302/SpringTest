@@ -16,7 +16,7 @@ public class Customers {
     private UUID id;
 
     @Column(name = "name")
-    private String customerName;
+    private String name;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
     private Accounts account;
