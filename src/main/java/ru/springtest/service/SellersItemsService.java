@@ -1,20 +1,20 @@
 package ru.springtest.service;
 
 
-import org.springframework.transaction.annotation.Transactional;
-import ru.springtest.domain.Items;
-import ru.springtest.domain.Sellers;
+import ru.springtest.domain.Item;
+import ru.springtest.domain.Seller;
 import ru.springtest.dto.ItemCreateUpdateDto;
+import ru.springtest.dto.ItemDto;
 import ru.springtest.dto.SellerCreateUpdateDto;
-import ru.springtest.dto.SellersItemsResponseDto;
+import ru.springtest.dto.SellerItemResponseDto;
 
 import java.util.UUID;
 
 public interface SellersItemsService {
-    Sellers createSeller(SellerCreateUpdateDto sellers);
-    Items createItem(ItemCreateUpdateDto items);
-    Sellers updateSeller(UUID id, SellerCreateUpdateDto dto);
-    Items updateItem(UUID id, ItemCreateUpdateDto dto);
-    SellersItemsResponseDto getSellersItemsBySellerId(UUID sellerId);
+    Seller createSeller(SellerCreateUpdateDto sellers);
+    ItemDto createItem(ItemCreateUpdateDto items);
+    Seller updateSeller(UUID id, SellerCreateUpdateDto dto);
+    ItemDto updateItem(UUID id, ItemCreateUpdateDto dto);
+    SellerItemResponseDto getSeller(UUID sellerId);
     void deleteSeller(UUID sellerId);
 }

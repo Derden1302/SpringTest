@@ -2,38 +2,37 @@ package ru.springtest.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
-import org.springframework.stereotype.Component;
-import ru.springtest.domain.Accounts;
-import ru.springtest.domain.Contracts;
-import ru.springtest.domain.Customers;
+import ru.springtest.domain.Account;
+import ru.springtest.domain.Customer;
 import ru.springtest.dto.AccountCreateUpdateDto;
 import ru.springtest.dto.CustomerAccountCreateUpdateDto;
 import ru.springtest.dto.CustomerAccountResponseDto;
 import ru.springtest.dto.CustomerCreateUpdateDto;
 
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface CustomerAccountMapper{
-    @Mapping(target = "customerId", source = "customers.id")
-    @Mapping(target = "name", source = "customers.name")
-    @Mapping(target = "accountData", source = "accounts.accountData")
-    CustomerAccountResponseDto toDto(Customers customers, Accounts accounts);
+    @Mapping(target = "customerId", source = "customer.id")
+    @Mapping(target = "name", source = "customer.name")
+    @Mapping(target = "accountData", source = "account.accountData")
+    CustomerAccountResponseDto toDto(Customer customer, Account account);
 
-    Customers createCustomer(CustomerCreateUpdateDto dto);
+    Customer toEntity(CustomerCreateUpdateDto dto);
 
-    Customers createCustomer(CustomerAccountCreateUpdateDto dto);
+    Customer toEntity(CustomerAccountCreateUpdateDto dto);
 
-    Accounts createAccount(AccountCreateUpdateDto dto, Customers customers);
+    Account toEntity(AccountCreateUpdateDto dto, Customer customer);
 
-    Accounts createAccount(CustomerAccountCreateUpdateDto dto, Customers customers);
+    Account toEntity(CustomerAccountCreateUpdateDto dto, Customer customer);
 
-    void updateAccount(@MappingTarget Accounts accounts, AccountCreateUpdateDto accountCreateUpdateDto);
+    void changeAccount(@MappingTarget Account account, AccountCreateUpdateDto accountCreateUpdateDto);
 
-    void updateAccount(@MappingTarget Accounts accounts, CustomerAccountCreateUpdateDto dto);
+    void changeAccount(@MappingTarget Account account, CustomerAccountCreateUpdateDto dto);
 
-    void updateCustomer(@MappingTarget Customers customers, CustomerCreateUpdateDto customerCreateUpdateDto);
+    void changeCustomer(@MappingTarget Customer customer, CustomerCreateUpdateDto customerCreateUpdateDto);
 
-    void updateCustomer(@MappingTarget Customers customers, CustomerAccountCreateUpdateDto dto);
+    void changeCustomer(@MappingTarget Customer customer, CustomerAccountCreateUpdateDto dto);
 
 }

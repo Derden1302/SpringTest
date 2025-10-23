@@ -3,7 +3,6 @@ package ru.springtest.domain;
 import jakarta.persistence.*;
 import lombok.Data;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,6 +18,6 @@ public class History {
     @Column(name="name")
     private String name;
 
-    @OneToMany(mappedBy = "history")
-    private Set<ContractHistory> contractHistories = new HashSet<>();
+    @ManyToMany(mappedBy = "history")
+    private Set<Contract> contract;
 }

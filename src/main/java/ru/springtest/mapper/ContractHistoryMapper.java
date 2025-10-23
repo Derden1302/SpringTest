@@ -2,39 +2,34 @@ package ru.springtest.mapper;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
 import org.mapstruct.MappingTarget;
-import org.springframework.lang.Contract;
-import org.springframework.stereotype.Component;
-import ru.springtest.domain.ContractHistory;
-import ru.springtest.domain.ContractHistoryId;
-import ru.springtest.domain.Contracts;
+import ru.springtest.domain.Contract;
 import ru.springtest.domain.History;
-import ru.springtest.dto.ContractCreateUpdateDto;
-import ru.springtest.dto.ContractHistoryCreateUpdateDto;
-import ru.springtest.dto.ContractHistoryResponseDto;
-import ru.springtest.dto.HistoryCreateUpdateDto;
+import ru.springtest.domain.Item;
+import ru.springtest.dto.*;
 
-import javax.swing.text.html.parser.Entity;
+import java.util.List;
+import java.util.Set;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface ContractHistoryMapper {
-    @Mapping(target = "contractId", source = "contractHistory.contract.id")
-    @Mapping(target = "historyId", source = "contractHistory.history.id")
-    @Mapping(target = "contractName", source = "contractHistory.contract.name")
-    @Mapping(target = "historyName", source = "contractHistory.history.name")
-    @Mapping(target = "eventDate", source = "contractHistory.eventDate")
-    ContractHistoryResponseDto toDto(ContractHistory contractHistory);
 
-    @Mapping(target = "id", source = "id")
-    ContractHistory contractHistoryToEntity(ContractHistoryId id, Contracts contract, History history);
+    Contract toEntity(ContractCreateUpdateDto dto);
 
-    Contracts contractsToEntity(ContractCreateUpdateDto dto);
+    History toEntity(HistoryCreateUpdateDto dto);
 
-    History historyToEntity(HistoryCreateUpdateDto dto);
+    ContractResponseDto toDto(Contract contract, List<HistoryDto> histories);
 
-    void contractsUpdateEntity(@MappingTarget Contracts contracts, ContractCreateUpdateDto dto);
+    HistoryResponseDto toDto(History history, List<ContractDto> contracts);
 
-    void historyUpdateEntity(@MappingTarget History history, HistoryCreateUpdateDto dto);
+    HistoryDto toDto(History history);
 
-    void contractHistoryUpdateEntity(@MappingTarget ContractHistory contractHistory, ContractHistoryCreateUpdateDto dto);
+    ContractDto toDto(Contract contract);
+
+    void changeContracts(@MappingTarget Contract contract, ContractCreateUpdateDto dto);
+
+    void changeHistory(@MappingTarget History history, HistoryCreateUpdateDto dto);
+
+
 }

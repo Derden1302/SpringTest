@@ -3,13 +3,13 @@ package ru.springtest.service.implementation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.springtest.domain.Accounts;
-import ru.springtest.domain.Customers;
+import ru.springtest.domain.Account;
+import ru.springtest.domain.Customer;
 import ru.springtest.dto.CustomerAccountCreateUpdateDto;
 import ru.springtest.dto.CustomerAccountResponseDto;
 import ru.springtest.mapper.CustomerAccountMapper;
-import ru.springtest.repository.AccountsRepository;
-import ru.springtest.repository.CustomersRepository;
+import ru.springtest.repository.AccountRepository;
+import ru.springtest.repository.CustomerRepository;
 import ru.springtest.service.CustomersAccountsService;
 
 import java.util.UUID;
@@ -17,43 +17,43 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class CustomersAccountsServiceImplementation implements CustomersAccountsService {
-    private final CustomersRepository customersRepository;
-    private final AccountsRepository accountsRepository;
+    private final CustomerRepository customerRepository;
+    private final AccountRepository accountRepository;
     private final CustomerAccountMapper mapper;
 
     @Transactional
     @Override
     public CustomerAccountResponseDto createWithAccount(CustomerAccountCreateUpdateDto dto) {
-        Customers customers = customersRepository.save(mapper.createCustomer(dto));
-        Accounts accounts = accountsRepository.save(mapper.createAccount(dto, customers));
-        return mapper.toDto(customers, accounts);
+        Customer customer = customerRepository.save(mapper.toEntity(dto));
+        Account account = accountRepository.save(mapper.toEntity(dto, customer));
+        return mapper.toDto(customer, account);
     }
 
     @Transactional
     @Override
     public CustomerAccountResponseDto getById(UUID id) {
-        Customers customer = customersRepository.findById(id).orElse(null);
+        Customer customer = customerRepository.findById(id).orElse(null);
         return mapper.toDto(
                 customer,
-                accountsRepository.findAccountsByCustomerId(id));
+                accountRepository.findAccountsByCustomerId(id));
     }
 
     @Override
     @Transactional
     public CustomerAccountResponseDto updateWithAccount(CustomerAccountCreateUpdateDto dto) {
-        Customers customer = customersRepository.findByName(dto.name());
-        mapper.updateCustomer(customer, dto);
-        customersRepository.save(customer);
-        Accounts accounts = accountsRepository.findAccountsByCustomerId(customer.getId());
-        mapper.updateAccount(accounts, dto);
-        accountsRepository.save(accounts);
-        return mapper.toDto(customer,accounts);
+        Customer customer = customerRepository.findByName(dto.name());
+        mapper.changeCustomer(customer, dto);
+        customerRepository.save(customer);
+        Account account = accountRepository.findAccountsByCustomerId(customer.getId());
+        mapper.changeAccount(account, dto);
+        accountRepository.save(account);
+        return mapper.toDto(customer, account);
     }
 
     @Override
     @Transactional
     public void delete(UUID id) {
-        customersRepository.deleteById(id);
+        customerRepository.deleteById(id);
     }
 
 }

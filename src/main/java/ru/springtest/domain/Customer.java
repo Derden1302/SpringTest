@@ -7,9 +7,9 @@ import lombok.Data;
 import java.util.UUID;
 
 @Entity
-@Table(name="customers")
+@Table(name="customer")
 @Data
-public class Customers {
+public class Customer {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name="id")
@@ -19,5 +19,5 @@ public class Customers {
     private String name;
 
     @OneToOne(mappedBy = "customer", cascade = CascadeType.ALL)
-    private Accounts account;
+    private Account account;
 }

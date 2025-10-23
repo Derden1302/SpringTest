@@ -2,11 +2,12 @@ package ru.springtest.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import ru.springtest.domain.Accounts;
+import ru.springtest.domain.Item;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface AccountsRepository extends JpaRepository<Accounts, UUID> {
-    Accounts findAccountsByCustomerId(UUID customerId);
+public interface ItemRepository extends JpaRepository<Item, UUID> {
+    List<Item> findBySellerId(UUID sellerId);
 }

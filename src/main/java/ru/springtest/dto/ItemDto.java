@@ -2,7 +2,7 @@ package ru.springtest.dto;
 
 import java.util.UUID;
 
-public record ItemsDto(
+public record ItemDto(
         UUID id,
         String name
 ){

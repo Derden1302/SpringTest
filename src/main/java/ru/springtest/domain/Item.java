@@ -6,9 +6,9 @@ import lombok.Data;
 import java.util.UUID;
 
 @Entity
-@Table(name="items")
+@Table(name="item")
 @Data
-public class Items {
+public class Item {
     @Id
     @GeneratedValue(strategy= GenerationType.UUID)
     @Column(name="id")
@@ -19,5 +19,5 @@ public class Items {
 
     @ManyToOne
     @JoinColumn(name="seller_id", referencedColumnName = "id")
-    private Sellers seller;
+    private Seller seller;
 }
