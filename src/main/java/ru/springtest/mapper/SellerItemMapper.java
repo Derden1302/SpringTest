@@ -19,6 +19,8 @@ public interface SellerItemMapper {
     SellerItemResponseDto toDto(Seller seller, List<ItemDto> items);
 
     @Mapping(target = "name", source = "dto.name")
+    @Mapping(target = "seller", source = "seller")
+    @Mapping(target = "id", ignore = true)
     Item toEntity(ItemCreateUpdateDto dto, Seller seller);
 
     Seller toEntity(SellerCreateUpdateDto dto);

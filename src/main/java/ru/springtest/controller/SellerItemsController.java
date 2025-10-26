@@ -2,6 +2,7 @@ package ru.springtest.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.springtest.domain.Item;
@@ -23,12 +24,13 @@ public class SellerItemsController {
 
     @PostMapping("/create-seller")
     public ResponseEntity<Seller> createSeller(@RequestBody SellerCreateUpdateDto dto) {
-        return ResponseEntity.ok(sellersItemsService.createSeller(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body((sellersItemsService.createSeller(dto)));
     }
 
     @PostMapping("/create-items")
     public ResponseEntity<ItemDto> createItems(@RequestBody ItemCreateUpdateDto dto) {
-        return ResponseEntity.ok(sellersItemsService.createItem(dto));
+        ItemDto itemDto = sellersItemsService.createItem(dto);
+        return ResponseEntity.status(HttpStatus.CREATED).body((itemDto));
     }
 
     @PutMapping("/update-seller/{id}")
@@ -47,7 +49,8 @@ public class SellerItemsController {
     }
 
     @DeleteMapping("/delete-by-seller/{id}")
-    public void deleteBySeller(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteBySeller(@PathVariable UUID id) {
         sellersItemsService.deleteSeller(id);
+        return ResponseEntity.noContent().build();
     }
 }

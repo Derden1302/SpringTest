@@ -7,6 +7,7 @@ import ru.springtest.domain.Account;
 import ru.springtest.domain.Customer;
 import ru.springtest.dto.CustomerAccountCreateUpdateDto;
 import ru.springtest.dto.CustomerAccountResponseDto;
+import ru.springtest.exception.NotFoundException;
 import ru.springtest.mapper.CustomerAccountMapper;
 import ru.springtest.repository.AccountRepository;
 import ru.springtest.repository.CustomerRepository;
@@ -32,7 +33,7 @@ public class CustomersAccountsServiceImplementation implements CustomersAccounts
     @Transactional
     @Override
     public CustomerAccountResponseDto getById(UUID id) {
-        Customer customer = customerRepository.findById(id).orElse(null);
+        Customer customer = customerRepository.findById(id).orElseThrow(()->new NotFoundException("Customer not found with id:" + id));
         return mapper.toDto(
                 customer,
                 accountRepository.findAccountsByCustomerId(id));
@@ -40,11 +41,11 @@ public class CustomersAccountsServiceImplementation implements CustomersAccounts
 
     @Override
     @Transactional
-    public CustomerAccountResponseDto updateWithAccount(CustomerAccountCreateUpdateDto dto) {
-        Customer customer = customerRepository.findByName(dto.name());
+    public CustomerAccountResponseDto updateWithAccount(CustomerAccountCreateUpdateDto dto, UUID id) {
+        Customer customer = customerRepository.findById(id).orElseThrow(()->new NotFoundException("Customer not found with id:" + id));
         mapper.changeCustomer(customer, dto);
         customerRepository.save(customer);
-        Account account = accountRepository.findAccountsByCustomerId(customer.getId());
+        Account account = accountRepository.findAccountsByCustomerId(id);
         mapper.changeAccount(account, dto);
         accountRepository.save(account);
         return mapper.toDto(customer, account);

@@ -9,6 +9,7 @@ import ru.springtest.dto.ItemCreateUpdateDto;
 import ru.springtest.dto.ItemDto;
 import ru.springtest.dto.SellerCreateUpdateDto;
 import ru.springtest.dto.SellerItemResponseDto;
+import ru.springtest.exception.NotFoundException;
 import ru.springtest.mapper.SellerItemMapper;
 import ru.springtest.repository.ItemRepository;
 import ru.springtest.repository.SellerRepository;
@@ -34,15 +35,15 @@ public class SellersItemsServiceImplementation implements SellersItemsService {
     @Transactional
     @Override
     public ItemDto createItem(ItemCreateUpdateDto dto) {
-        Seller seller = sellerRepository.findById(dto.sellerId()).orElseThrow(() -> new RuntimeException("Seller not found!"));
-        Item item = mapper.toEntity(dto, seller);
-        return mapper.toDto(itemRepository.save(item));
+        Seller seller = sellerRepository.findById(dto.sellerId()).orElseThrow(() -> new NotFoundException("Seller not found!"));
+        Item item = itemRepository.save(mapper.toEntity(dto, seller));
+        return mapper.toDto(item);
     }
 
     @Transactional
     @Override
     public Seller updateSeller(UUID id, SellerCreateUpdateDto dto) {
-        Seller seller = sellerRepository.findById(id).orElseThrow(() -> new RuntimeException("Seller not found!"));
+        Seller seller = sellerRepository.findById(id).orElseThrow(() -> new NotFoundException("Seller not found!"));
         mapper.changeSeller(seller, dto);
         return sellerRepository.save(seller);
     }
@@ -50,7 +51,7 @@ public class SellersItemsServiceImplementation implements SellersItemsService {
     @Transactional
     @Override
     public ItemDto updateItem(UUID id, ItemCreateUpdateDto dto) {
-        Item item = itemRepository.findById(id).orElseThrow(() -> new RuntimeException("Item not found!"));
+        Item item = itemRepository.findById(id).orElseThrow(() -> new NotFoundException("Item not found!"));
         mapper.changeItem(item, dto);
         return mapper.toDto(itemRepository.save(item));
     }
@@ -58,7 +59,7 @@ public class SellersItemsServiceImplementation implements SellersItemsService {
     @Transactional
     @Override
     public SellerItemResponseDto getSeller(UUID sellerId) {
-        Seller seller = sellerRepository.findById(sellerId).orElseThrow(() -> new RuntimeException("Seller not found!"));
+        Seller seller = sellerRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("Seller not found!"));
         List<ItemDto> items = itemRepository.findBySellerId(sellerId).stream().map(mapper::toDto).toList();
         return mapper.toDto(seller, items);
     }

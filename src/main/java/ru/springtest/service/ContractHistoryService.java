@@ -8,10 +8,10 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ContractHistoryService {
-    Contract createContract(ContractCreateUpdateDto contract);
-    History createHistory(HistoryCreateUpdateDto history);
-    History updateHistory(UUID id, HistoryCreateUpdateDto dto);
-    Contract updateContract(UUID id, ContractCreateUpdateDto dto);
+    ContractResponseDto createContract(ContractCreateUpdateDto contract);
+    HistoryResponseDto createHistory(HistoryCreateUpdateDto history);
+    HistoryResponseDto updateHistory(UUID id, HistoryCreateUpdateDto dto);
+    ContractResponseDto updateContract(UUID id, ContractCreateUpdateDto dto);
     void deleteHistory (UUID id);
     void deleteContract (UUID id);
     ContractResponseDto getContract(UUID contractId);

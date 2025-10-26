@@ -3,6 +3,7 @@ package ru.springtest.domain;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -19,5 +20,5 @@ public class History {
     private String name;
 
     @ManyToMany(mappedBy = "history")
-    private Set<Contract> contract;
+    private List<Contract> contract;
 }

@@ -8,6 +8,6 @@ import java.util.UUID;
 public interface CustomersAccountsService {
     CustomerAccountResponseDto createWithAccount(CustomerAccountCreateUpdateDto dto);
     CustomerAccountResponseDto getById(UUID id);
-    CustomerAccountResponseDto updateWithAccount(CustomerAccountCreateUpdateDto dto);
+    CustomerAccountResponseDto updateWithAccount(CustomerAccountCreateUpdateDto dto,  UUID id);
     void delete(UUID id);
 }

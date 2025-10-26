@@ -2,6 +2,7 @@ package ru.springtest.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.springtest.dto.CustomerAccountCreateUpdateDto;
@@ -19,12 +20,12 @@ public class CustomerAccountController {
 
     @PostMapping("/create-pair")
     public ResponseEntity<CustomerAccountResponseDto> createWithAccount(@RequestBody CustomerAccountCreateUpdateDto dto) {
-        return ResponseEntity.ok(customersAccountsService.createWithAccount(dto));
+        return ResponseEntity.status(HttpStatus.CREATED).body((customersAccountsService.createWithAccount(dto)));
     }
 
     @PutMapping("/update-pair")
-    public ResponseEntity<CustomerAccountResponseDto> updateWithAccount(@RequestBody CustomerAccountCreateUpdateDto dto) {
-        return ResponseEntity.ok(customersAccountsService.updateWithAccount(dto));
+    public ResponseEntity<CustomerAccountResponseDto> updateWithAccount(@PathVariable UUID id, @RequestBody CustomerAccountCreateUpdateDto dto) {
+        return ResponseEntity.ok(customersAccountsService.updateWithAccount(dto, id));
     }
 
     @GetMapping("/get-by-id/{id}")
@@ -33,8 +34,9 @@ public class CustomerAccountController {
     }
 
     @DeleteMapping("/delete-by-id/{id}")
-    public void deleteById(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteById(@PathVariable UUID id) {
         customersAccountsService.delete(id);
+        return ResponseEntity.noContent().build();
     }
 
 }

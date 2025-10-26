@@ -17,7 +17,11 @@ public interface ContractHistoryMapper {
 
     Contract toEntity(ContractCreateUpdateDto dto);
 
+    Contract toEntity(ContractCreateUpdateDto dto, List<History> history);
+
     History toEntity(HistoryCreateUpdateDto dto);
+
+    History toEntity(HistoryCreateUpdateDto dto, List<Contract> contract);
 
     ContractResponseDto toDto(Contract contract, List<HistoryDto> histories);
 
@@ -27,9 +31,9 @@ public interface ContractHistoryMapper {
 
     ContractDto toDto(Contract contract);
 
-    void changeContracts(@MappingTarget Contract contract, ContractCreateUpdateDto dto);
+    void changeContracts(@MappingTarget Contract contract, ContractCreateUpdateDto dto, List<History> history);
 
-    void changeHistory(@MappingTarget History history, HistoryCreateUpdateDto dto);
+    void changeHistory(@MappingTarget History history, HistoryCreateUpdateDto dto, List<Contract> contract);
 
 
 }

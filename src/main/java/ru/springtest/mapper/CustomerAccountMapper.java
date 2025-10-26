@@ -25,6 +25,7 @@ public interface CustomerAccountMapper{
 
     Account toEntity(AccountCreateUpdateDto dto, Customer customer);
 
+    @Mapping(target = "id", ignore = true)
     Account toEntity(CustomerAccountCreateUpdateDto dto, Customer customer);
 
     void changeAccount(@MappingTarget Account account, AccountCreateUpdateDto accountCreateUpdateDto);

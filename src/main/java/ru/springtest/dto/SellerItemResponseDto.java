@@ -5,6 +5,6 @@ import java.util.UUID;
 
 public record SellerItemResponseDto(
         String name,
-        List<ItemDto> list
+        List<ItemDto> items
 ) {
 }

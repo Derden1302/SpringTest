@@ -3,6 +3,7 @@ package ru.springtest.domain;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -24,5 +25,5 @@ public class Contract {
             joinColumns = @JoinColumn(name = "contract_id"),
             inverseJoinColumns = @JoinColumn(name = "history_id")
     )
-    private Set<History> history;
+    private List<History> history;
 }
