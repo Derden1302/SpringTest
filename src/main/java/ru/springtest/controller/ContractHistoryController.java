@@ -31,12 +31,12 @@ public class ContractHistoryController {
     }
 
 
-    @PutMapping("/update/contract/{id}")
+    @PutMapping("/contract/{id}")
     public ResponseEntity<ContractResponseDto> updateContract(@PathVariable UUID id, @RequestBody ContractCreateUpdateDto contract) {
         return ResponseEntity.ok(contractHistoryService.updateContract(id,contract));
     }
 
-    @PutMapping("/update/history/{id}")
+    @PutMapping("/history/{id}")
     public ResponseEntity<HistoryResponseDto> updateHistory(@PathVariable UUID id, @RequestBody HistoryCreateUpdateDto history) {
         return ResponseEntity.ok(contractHistoryService.updateHistory(id,history));
     }

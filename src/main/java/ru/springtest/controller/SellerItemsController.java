@@ -22,33 +22,33 @@ import java.util.UUID;
 public class SellerItemsController {
     private final SellersItemsService sellersItemsService;
 
-    @PostMapping("/create-seller")
+    @PostMapping("/seller")
     public ResponseEntity<Seller> createSeller(@RequestBody SellerCreateUpdateDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body((sellersItemsService.createSeller(dto)));
     }
 
-    @PostMapping("/create-items")
+    @PostMapping("/items")
     public ResponseEntity<ItemDto> createItems(@RequestBody ItemCreateUpdateDto dto) {
         ItemDto itemDto = sellersItemsService.createItem(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body((itemDto));
     }
 
-    @PutMapping("/update-seller/{id}")
+    @PutMapping("/seller/{id}")
     public ResponseEntity<Seller> updateSellers(@PathVariable UUID id, @RequestBody SellerCreateUpdateDto dto) {
         return ResponseEntity.ok(sellersItemsService.updateSeller(id, dto));
     }
 
-    @PutMapping("/update-item/{id}")
+    @PutMapping("/item/{id}")
     public ResponseEntity<ItemDto> updateItem(@PathVariable UUID id, @RequestBody ItemCreateUpdateDto dto) {
         return ResponseEntity.ok(sellersItemsService.updateItem(id, dto));
     }
 
-    @GetMapping("/get-by-seller/{id}")
+    @GetMapping("/seller/{id}")
     public ResponseEntity<SellerItemResponseDto> getSeller(@PathVariable UUID id) {
         return ResponseEntity.ok(sellersItemsService.getSeller(id));
     }
 
-    @DeleteMapping("/delete-by-seller/{id}")
+    @DeleteMapping("/seller/{id}")
     public ResponseEntity<Void> deleteBySeller(@PathVariable UUID id) {
         sellersItemsService.deleteSeller(id);
         return ResponseEntity.noContent().build();
