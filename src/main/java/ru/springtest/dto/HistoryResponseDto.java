@@ -5,6 +5,6 @@ import java.util.Set;
 
 public record HistoryResponseDto(
         String name,
-        List<ContractDto> contracts
+        List<ContractDto> contract
 ) {
 }

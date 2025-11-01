@@ -3,6 +3,7 @@ package ru.springtest.domain;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -19,6 +20,13 @@ public class History {
     @Column(name="name")
     private String name;
 
-    @ManyToMany(mappedBy = "history")
+    @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+    @JoinTable(
+            name = "contract_history",
+            joinColumns = @JoinColumn(name = "history_id"),
+            inverseJoinColumns = @JoinColumn(name = "contract_id")
+    )
     private List<Contract> contract;
+
+
 }

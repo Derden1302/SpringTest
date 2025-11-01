@@ -10,6 +10,7 @@ import java.util.UUID;
 public record HistoryCreateUpdateDto(
         @NotBlank(message = "Имя отсутствует")
         String name,
-        List<UUID> contractsIds
+        @NotBlank(message = "Договора отсутствуют")
+        List<ContractDto> contractsDtos
 ){
 }
