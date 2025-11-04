@@ -3,6 +3,7 @@ package ru.springtest.domain;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -16,4 +17,7 @@ public class Seller {
 
     @Column(name="name")
     private String name;
+
+    @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    private List<Item> item;
 }

@@ -3,65 +3,53 @@ package ru.springtest.service.implementation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.springtest.domain.Item;
 import ru.springtest.domain.Seller;
-import ru.springtest.dto.ItemCreateUpdateDto;
 import ru.springtest.dto.ItemDto;
 import ru.springtest.dto.SellerCreateUpdateDto;
 import ru.springtest.dto.SellerItemResponseDto;
 import ru.springtest.exception.NotFoundException;
-import ru.springtest.mapper.SellerItemMapper;
+import ru.springtest.mapper.SellerMapper;
 import ru.springtest.repository.ItemRepository;
 import ru.springtest.repository.SellerRepository;
-import ru.springtest.service.SellersItemsService;
+import ru.springtest.service.ItemService;
+import ru.springtest.service.SellerService;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class SellersItemsServiceImplementation implements SellersItemsService {
+public class SellerServiceImplementation implements SellerService {
     private final SellerRepository sellerRepository;
-    private final ItemRepository itemRepository;
-    private final SellerItemMapper mapper;
+    private final SellerMapper mapper;
 
     @Transactional
     @Override
-    public Seller createSeller(SellerCreateUpdateDto dto) {
+    public SellerItemResponseDto createSeller(SellerCreateUpdateDto dto) {
         Seller seller = mapper.toEntity(dto);
-        return sellerRepository.save(seller);
+        return mapper.toDto(sellerRepository.save(seller));
     }
 
     @Transactional
     @Override
-    public ItemDto createItem(ItemCreateUpdateDto dto) {
-        Seller seller = sellerRepository.findById(dto.sellerId()).orElseThrow(() -> new NotFoundException("Seller not found!"));
-        Item item = itemRepository.save(mapper.toEntity(dto, seller));
-        return mapper.toDto(item);
+    public SellerItemResponseDto getSellerEntity(UUID id) {
+        Seller seller = sellerRepository.findById(id).orElseThrow(() -> new NotFoundException("Seller not found!"));
+        return mapper.toDto(seller);
     }
 
     @Transactional
     @Override
-    public Seller updateSeller(UUID id, SellerCreateUpdateDto dto) {
+    public SellerItemResponseDto updateSeller(UUID id, SellerCreateUpdateDto dto) {
         Seller seller = sellerRepository.findById(id).orElseThrow(() -> new NotFoundException("Seller not found!"));
         mapper.changeSeller(seller, dto);
-        return sellerRepository.save(seller);
-    }
-
-    @Transactional
-    @Override
-    public ItemDto updateItem(UUID id, ItemCreateUpdateDto dto) {
-        Item item = itemRepository.findById(id).orElseThrow(() -> new NotFoundException("Item not found!"));
-        mapper.changeItem(item, dto);
-        return mapper.toDto(itemRepository.save(item));
+        return mapper.toDto(sellerRepository.save(seller));
     }
 
     @Transactional
     @Override
     public SellerItemResponseDto getSeller(UUID sellerId) {
         Seller seller = sellerRepository.findById(sellerId).orElseThrow(() -> new NotFoundException("Seller not found!"));
-        List<ItemDto> items = itemRepository.findBySellerId(sellerId).stream().map(mapper::toDto).toList();
-        return mapper.toDto(seller, items);
+        return mapper.toDto(seller);
     }
 
     @Transactional

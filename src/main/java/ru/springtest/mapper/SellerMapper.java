@@ -14,22 +14,11 @@ import ru.springtest.dto.SellerItemResponseDto;
 import java.util.List;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface SellerItemMapper {
+public interface SellerMapper {
 
-    SellerItemResponseDto toDto(Seller seller, List<ItemDto> items);
-
-    @Mapping(target = "name", source = "dto.name")
-    @Mapping(target = "seller", source = "seller")
-    @Mapping(target = "id", ignore = true)
-    Item toEntity(ItemCreateUpdateDto dto, Seller seller);
+    SellerItemResponseDto toDto(Seller seller);
 
     Seller toEntity(SellerCreateUpdateDto dto);
 
-    ItemDto toDto(Item item);
-
     void changeSeller(@MappingTarget Seller seller, SellerCreateUpdateDto dto);
-
-    void changeItem(@MappingTarget Item item, ItemCreateUpdateDto dto);
-
-
 }

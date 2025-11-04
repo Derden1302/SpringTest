@@ -7,35 +7,35 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.springtest.dto.CustomerAccountCreateUpdateDto;
 import ru.springtest.dto.CustomerAccountResponseDto;
-import ru.springtest.service.CustomersAccountsService;
+import ru.springtest.service.CustomerAccountService;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping(value="customer-account/v1/api")
+@RequestMapping(value="customer-account/v2/api")
 @Slf4j
 @RequiredArgsConstructor
 public class CustomerAccountController {
-    private final CustomersAccountsService customersAccountsService;
+    private final CustomerAccountService customerAccountService;
 
     @PostMapping("/")
     public ResponseEntity<CustomerAccountResponseDto> createWithAccount(@RequestBody CustomerAccountCreateUpdateDto dto) {
-        return ResponseEntity.status(HttpStatus.CREATED).body((customersAccountsService.createWithAccount(dto)));
+        return ResponseEntity.status(HttpStatus.CREATED).body((customerAccountService.createWithAccount(dto)));
     }
 
-    @PutMapping("/")
+    @PutMapping("/{id}")
     public ResponseEntity<CustomerAccountResponseDto> updateWithAccount(@PathVariable UUID id, @RequestBody CustomerAccountCreateUpdateDto dto) {
-        return ResponseEntity.ok(customersAccountsService.updateWithAccount(dto, id));
+        return ResponseEntity.ok(customerAccountService.updateWithAccount(dto, id));
     }
 
-    @GetMapping("/customer/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<CustomerAccountResponseDto> getWithId(@PathVariable UUID id) {
-        return ResponseEntity.ok(customersAccountsService.getById(id));
+        return ResponseEntity.ok(customerAccountService.getById(id));
     }
 
-    @DeleteMapping("/customer/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable UUID id) {
-        customersAccountsService.delete(id);
+        customerAccountService.delete(id);
         return ResponseEntity.noContent().build();
     }
 

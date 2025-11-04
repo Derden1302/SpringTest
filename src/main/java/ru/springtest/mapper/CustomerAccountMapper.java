@@ -13,7 +13,7 @@ import ru.springtest.dto.CustomerCreateUpdateDto;
 
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
-public interface CustomerAccountMapper{
+public interface CustomerAccountMapper {
     @Mapping(target = "customerId", source = "customer.id")
     @Mapping(target = "name", source = "customer.name")
     @Mapping(target = "accountData", source = "account.accountData")

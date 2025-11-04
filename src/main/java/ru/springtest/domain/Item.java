@@ -17,7 +17,7 @@ public class Item {
     @Column(name="name")
     private String name;
 
-    @ManyToOne
-    @JoinColumn(name="seller_id", referencedColumnName = "id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", referencedColumnName = "id")
     private Seller seller;
 }

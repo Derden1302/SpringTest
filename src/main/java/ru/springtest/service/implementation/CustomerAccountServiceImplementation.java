@@ -11,13 +11,13 @@ import ru.springtest.exception.NotFoundException;
 import ru.springtest.mapper.CustomerAccountMapper;
 import ru.springtest.repository.AccountRepository;
 import ru.springtest.repository.CustomerRepository;
-import ru.springtest.service.CustomersAccountsService;
+import ru.springtest.service.CustomerAccountService;
 
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class CustomersAccountsServiceImplementation implements CustomersAccountsService {
+public class CustomerAccountServiceImplementation implements CustomerAccountService {
     private final CustomerRepository customerRepository;
     private final AccountRepository accountRepository;
     private final CustomerAccountMapper mapper;
