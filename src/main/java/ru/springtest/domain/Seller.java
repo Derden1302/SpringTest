@@ -18,6 +18,6 @@ public class Seller {
     @Column(name="name")
     private String name;
 
-    @OneToMany(mappedBy = "seller", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
     private List<Item> item;
 }

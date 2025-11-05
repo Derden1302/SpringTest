@@ -12,7 +12,6 @@ import java.util.UUID;
 
 public interface SellerService {
     SellerItemResponseDto createSeller(SellerCreateUpdateDto sellers);
-    SellerItemResponseDto getSellerEntity(UUID id);
     SellerItemResponseDto updateSeller(UUID id, SellerCreateUpdateDto dto);
     SellerItemResponseDto getSeller(UUID sellerId);
     void deleteSeller(UUID sellerId);
