@@ -18,22 +18,22 @@ import java.util.UUID;
 public class CustomerAccountController {
     private final CustomerAccountService customerAccountService;
 
-    @PostMapping("/")
+    @PostMapping("/сustomer")
     public ResponseEntity<CustomerAccountResponseDto> createWithAccount(@RequestBody CustomerAccountCreateUpdateDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body((customerAccountService.createWithAccount(dto)));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/customer/{id}")
     public ResponseEntity<CustomerAccountResponseDto> updateWithAccount(@PathVariable UUID id, @RequestBody CustomerAccountCreateUpdateDto dto) {
         return ResponseEntity.ok(customerAccountService.updateWithAccount(dto, id));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/customer/{id}")
     public ResponseEntity<CustomerAccountResponseDto> getWithId(@PathVariable UUID id) {
         return ResponseEntity.ok(customerAccountService.getById(id));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/customer/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable UUID id) {
         customerAccountService.delete(id);
         return ResponseEntity.noContent().build();

@@ -16,7 +16,7 @@ import ru.springtest.service.SellerService;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(value="sellers-items/v1/api")
+@RequestMapping(value="sellers-items/v2/api")
 @Slf4j
 @RequiredArgsConstructor
 public class SellerItemsController {

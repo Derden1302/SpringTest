@@ -12,7 +12,7 @@ import ru.springtest.service.HistoryService;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(value="contract-history/v1/api")
+@RequestMapping(value="contract-history/v2/api")
 @Slf4j
 @RequiredArgsConstructor
 public class ContractHistoryController {
