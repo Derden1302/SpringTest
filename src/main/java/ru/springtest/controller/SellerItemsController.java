@@ -2,52 +2,50 @@ package ru.springtest.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.springtest.domain.Items;
-import ru.springtest.domain.Sellers;
-import ru.springtest.dto.ItemCreateDto;
-import ru.springtest.dto.ItemsDto;
-import ru.springtest.dto.SellerDto;
-import ru.springtest.dto.SellersItemsResponseDto;
-import ru.springtest.service.SellersItemsService;
+import ru.springtest.domain.Seller;
+import ru.springtest.dto.ItemCreateUpdateDto;
+import ru.springtest.dto.ItemDto;
+import ru.springtest.dto.SellerCreateUpdateDto;
+import ru.springtest.dto.SellerItemResponseDto;
+import ru.springtest.service.ItemService;
+import ru.springtest.service.SellerService;
 
 import java.util.UUID;
 
 @RestController
-@RequestMapping(value="sellers-items/v1/api")
+@RequestMapping(value="sellers-items/v2/api")
 @Slf4j
 @RequiredArgsConstructor
 public class SellerItemsController {
-    private final SellersItemsService sellersItemsService;
+    private final SellerService sellerService;
+    private final ItemService itemService;
 
-    @PostMapping("/create-seller")
-    public ResponseEntity<Sellers> createSeller(@RequestBody SellerDto dto) {
-        return ResponseEntity.ok(sellersItemsService.createSeller(dto));
+    @PostMapping("/seller")
+    public ResponseEntity<SellerItemResponseDto> createSeller(@RequestBody SellerCreateUpdateDto dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body((sellerService.createSeller(dto)));
     }
 
-    @PostMapping("/create-items")
-    public ResponseEntity<Items> createItems(@RequestBody ItemCreateDto dto) {
-        return ResponseEntity.ok(sellersItemsService.createItem(dto));
+    @PutMapping("/seller/{id}")
+    public ResponseEntity<SellerItemResponseDto> updateSellers(@PathVariable UUID id, @RequestBody SellerCreateUpdateDto dto) {
+        return ResponseEntity.ok(sellerService.updateSeller(id, dto));
     }
 
-    @PutMapping("/update-seller")
-    public ResponseEntity<Sellers> updateSellers(@RequestBody Sellers seller) {
-        return ResponseEntity.ok(sellersItemsService.updateSeller(seller));
+    @PutMapping("/item/{id}")
+    public ResponseEntity<ItemDto> updateItem(@PathVariable UUID id, @RequestBody ItemCreateUpdateDto dto) {
+        return ResponseEntity.ok(itemService.updateItem(id, dto));
     }
 
-    @PutMapping("/update-item")
-    public ResponseEntity<Items> updateItem(@RequestBody Items item) {
-        return ResponseEntity.ok(sellersItemsService.updateItem(item));
+    @GetMapping("/seller/{id}")
+    public ResponseEntity<SellerItemResponseDto> getSeller(@PathVariable UUID id) {
+        return ResponseEntity.ok(sellerService.getSeller(id));
     }
 
-    @GetMapping("/get-by-seller")
-    public ResponseEntity<SellersItemsResponseDto> getBySeller(@RequestParam UUID id) {
-        return ResponseEntity.ok(sellersItemsService.getSellersItemsBySellerId(id));
-    }
-
-    @DeleteMapping("/delete-by-seller")
-    public void deleteBySeller(@RequestParam UUID id) {
-        sellersItemsService.deleteSeller(id);
+    @DeleteMapping("/seller/{id}")
+    public ResponseEntity<Void> deleteBySeller(@PathVariable UUID id) {
+        sellerService.deleteSeller(id);
+        return ResponseEntity.noContent().build();
     }
 }

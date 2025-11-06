@@ -10,11 +10,11 @@ import java.util.UUID;
 
 @Entity
 @Data
-@Table(name="history")
-public class History {
+@Table(name="contract")
+public class Contract {
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name="id")
+    @GeneratedValue(strategy=GenerationType.UUID)
     private UUID id;
 
     @Column(name="name")
@@ -23,10 +23,9 @@ public class History {
     @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JoinTable(
             name = "contract_history",
-            joinColumns = @JoinColumn(name = "history_id"),
-            inverseJoinColumns = @JoinColumn(name = "contract_id")
+            joinColumns = @JoinColumn(name = "contract_id"),
+            inverseJoinColumns = @JoinColumn(name = "history_id")
     )
-    private List<Contract> contract;
-
+    private List<History> history;
 
 }

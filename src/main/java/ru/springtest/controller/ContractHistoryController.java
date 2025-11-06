@@ -2,61 +2,63 @@ package ru.springtest.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.lang.Contract;
 import org.springframework.web.bind.annotation.*;
-import ru.springtest.domain.ContractHistory;
-import ru.springtest.domain.Contracts;
-import ru.springtest.domain.History;
 import ru.springtest.dto.*;
-import ru.springtest.repository.ContractHistoryRepository;
-import ru.springtest.service.ContractHistoryService;
+import ru.springtest.service.ContractService;
+import ru.springtest.service.HistoryService;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping(value="contract-history/v1/api")
+@RequestMapping(value="contract-history/v2/api")
 @Slf4j
 @RequiredArgsConstructor
 public class ContractHistoryController {
-    private final ContractHistoryService contractHistoryService;
+    private final ContractService contractService;
+    private final HistoryService historyService;
 
     @PostMapping("/contract")
-    public ResponseEntity<Contracts> createContract(@RequestBody ContractCreateDto contract) {
-        return ResponseEntity.ok(contractHistoryService.createContract(contract));
+    public ResponseEntity<ContractResponseDto> createContract(@RequestBody ContractCreateUpdateDto contract) {
+        return ResponseEntity.status(HttpStatus.CREATED).body((contractService.createContract(contract)));
     }
 
     @PostMapping("/history")
-    public ResponseEntity<History> createHistory(@RequestBody HistoryCreateDto history) {
-        return ResponseEntity.ok(contractHistoryService.createHistory(history));
+    public ResponseEntity<HistoryResponseDto> createHistory(@RequestBody HistoryCreateUpdateDto history) {
+        return ResponseEntity.status(HttpStatus.CREATED).body((historyService.createHistory(history)));
     }
 
-    @PostMapping("/contract-history")
-    public ResponseEntity<ContractHistoryResponseDto> createContractHistory(@RequestBody ContractHistoryCreateUpdateDto dto) {
-        return ResponseEntity.ok(contractHistoryService.createOrUpdate(dto));
+    @PutMapping("/contract/{id}")
+    public ResponseEntity<ContractResponseDto> updateContract(@PathVariable UUID id, @RequestBody ContractCreateUpdateDto contract) {
+        return ResponseEntity.ok(contractService.updateContract(id,contract));
     }
 
-    @GetMapping("/by-pair-key")
-    public ResponseEntity<ContractHistoryResponseDto> getContractHistoryByPairKey
-            (@RequestParam UUID contractId, @RequestParam UUID historyId) {
-        return ResponseEntity.ok(contractHistoryService.getByKey(new ContractHistoryKeyDto(contractId, historyId)));
+    @PutMapping("/history/{id}")
+    public ResponseEntity<HistoryResponseDto> updateHistory(@PathVariable UUID id, @RequestBody HistoryCreateUpdateDto history) {
+        return ResponseEntity.ok(historyService.updateHistory(id,history));
     }
 
-    @DeleteMapping
-    public void delete(@RequestParam UUID contractId, @RequestParam UUID historyId) {
-        contractHistoryService.deleteByKey(new ContractHistoryKeyDto(contractId, historyId));
+    @DeleteMapping("/contract/{contractId}")
+    public ResponseEntity<Void> deleteContract(@PathVariable UUID contractId) {
+        contractService.deleteContract(contractId);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/by-contract")
-    public List<ContractHistoryResponseDto> listByContract(@RequestParam UUID contractId) {
-        return contractHistoryService.listByContract(contractId);
+    @DeleteMapping("/history/{historyId}")
+    public ResponseEntity<Void> deleteHistory(@PathVariable UUID historyId) {
+        historyService.deleteHistory(historyId);
+        return ResponseEntity.noContent().build();
     }
 
-    @GetMapping("/by-history")
-    public List<ContractHistoryResponseDto> listByHistory(@RequestParam UUID historyId) {
-        return contractHistoryService.listByHistory(historyId);
+    @GetMapping("/contract/{contractId}")
+    public ResponseEntity<ContractResponseDto> getContract (@PathVariable UUID contractId) {
+        return ResponseEntity.ok(contractService.getContract(contractId)) ;
     }
 
+    @GetMapping("/history/{historyId}")
+    public ResponseEntity<HistoryResponseDto> getHistory(@PathVariable UUID historyId) {
+        return ResponseEntity.ok(historyService.getHistory(historyId));
+    }
 
 }
