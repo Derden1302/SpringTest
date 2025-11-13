@@ -1,5 +1,6 @@
 package ru.springtest.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -24,17 +25,17 @@ public class SellerItemsController {
     private final ItemService itemService;
 
     @PostMapping("/seller")
-    public ResponseEntity<SellerItemResponseDto> createSeller(@RequestBody SellerCreateUpdateDto dto) {
+    public ResponseEntity<SellerItemResponseDto> createSeller(@RequestBody @Valid SellerCreateUpdateDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body((sellerService.createSeller(dto)));
     }
 
     @PutMapping("/seller/{id}")
-    public ResponseEntity<SellerItemResponseDto> updateSellers(@PathVariable UUID id, @RequestBody SellerCreateUpdateDto dto) {
+    public ResponseEntity<SellerItemResponseDto> updateSellers(@PathVariable UUID id, @RequestBody @Valid SellerCreateUpdateDto dto) {
         return ResponseEntity.ok(sellerService.updateSeller(id, dto));
     }
 
     @PutMapping("/item/{id}")
-    public ResponseEntity<ItemDto> updateItem(@PathVariable UUID id, @RequestBody ItemCreateUpdateDto dto) {
+    public ResponseEntity<ItemDto> updateItem(@PathVariable UUID id, @RequestBody @Valid ItemCreateUpdateDto dto) {
         return ResponseEntity.ok(itemService.updateItem(id, dto));
     }
 
