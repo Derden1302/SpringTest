@@ -1,5 +1,6 @@
 package ru.springtest.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,22 +21,22 @@ public class ContractHistoryController {
     private final HistoryService historyService;
 
     @PostMapping("/contract")
-    public ResponseEntity<ContractResponseDto> createContract(@RequestBody ContractCreateUpdateDto contract) {
+    public ResponseEntity<ContractResponseDto> createContract(@RequestBody @Valid ContractCreateUpdateDto contract) {
         return ResponseEntity.status(HttpStatus.CREATED).body((contractService.createContract(contract)));
     }
 
     @PostMapping("/history")
-    public ResponseEntity<HistoryResponseDto> createHistory(@RequestBody HistoryCreateUpdateDto history) {
+    public ResponseEntity<HistoryResponseDto> createHistory(@RequestBody @Valid HistoryCreateUpdateDto history) {
         return ResponseEntity.status(HttpStatus.CREATED).body((historyService.createHistory(history)));
     }
 
     @PutMapping("/contract/{id}")
-    public ResponseEntity<ContractResponseDto> updateContract(@PathVariable UUID id, @RequestBody ContractCreateUpdateDto contract) {
+    public ResponseEntity<ContractResponseDto> updateContract(@PathVariable UUID id, @RequestBody @Valid ContractCreateUpdateDto contract) {
         return ResponseEntity.ok(contractService.updateContract(id,contract));
     }
 
     @PutMapping("/history/{id}")
-    public ResponseEntity<HistoryResponseDto> updateHistory(@PathVariable UUID id, @RequestBody HistoryCreateUpdateDto history) {
+    public ResponseEntity<HistoryResponseDto> updateHistory(@PathVariable UUID id, @RequestBody @Valid HistoryCreateUpdateDto history) {
         return ResponseEntity.ok(historyService.updateHistory(id,history));
     }
 

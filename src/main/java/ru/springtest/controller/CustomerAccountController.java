@@ -1,5 +1,6 @@
 package ru.springtest.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -19,12 +20,12 @@ public class CustomerAccountController {
     private final CustomerAccountService customerAccountService;
 
     @PostMapping("/сustomer")
-    public ResponseEntity<CustomerAccountResponseDto> createWithAccount(@RequestBody CustomerAccountCreateUpdateDto dto) {
+    public ResponseEntity<CustomerAccountResponseDto> createWithAccount(@RequestBody @Valid CustomerAccountCreateUpdateDto dto) {
         return ResponseEntity.status(HttpStatus.CREATED).body((customerAccountService.createWithAccount(dto)));
     }
 
     @PutMapping("/customer/{id}")
-    public ResponseEntity<CustomerAccountResponseDto> updateWithAccount(@PathVariable UUID id, @RequestBody CustomerAccountCreateUpdateDto dto) {
+    public ResponseEntity<CustomerAccountResponseDto> updateWithAccount(@PathVariable UUID id, @RequestBody @Valid CustomerAccountCreateUpdateDto dto) {
         return ResponseEntity.ok(customerAccountService.updateWithAccount(dto, id));
     }
 

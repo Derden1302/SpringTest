@@ -1,13 +1,15 @@
 package ru.springtest.dto;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 
 import java.util.List;
 
 public record SellerCreateUpdateDto(
         @NotBlank(message = "Имя отсутствует")
         String name,
-        @NotBlank(message = "Объекты отсутствуют")
-        List<ItemDto> item
+        @NotEmpty(message = "Объекты отсутствуют")
+        List<@Valid ItemDto> item
 ) {
 }
