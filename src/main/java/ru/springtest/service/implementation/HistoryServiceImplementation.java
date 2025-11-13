@@ -1,6 +1,9 @@
 package ru.springtest.service.implementation;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.springtest.domain.Contract;
@@ -28,6 +31,7 @@ public class HistoryServiceImplementation implements HistoryService {
     private final HistoryMapper historyMapper;
 
 
+    @CachePut(value = "history", key = "result.id()")
     @Transactional
     @Override
     public HistoryResponseDto createHistory(HistoryCreateUpdateDto dto){
@@ -37,6 +41,7 @@ public class HistoryServiceImplementation implements HistoryService {
         return historyMapper.toResponseDto(historyRepository.save(history));
     }
 
+    @CachePut(value = "history", key = "result.id()")
     @Transactional
     @Override
     public HistoryResponseDto updateHistory(UUID id, HistoryCreateUpdateDto dto) {
@@ -46,6 +51,7 @@ public class HistoryServiceImplementation implements HistoryService {
         return historyMapper.toResponseDto(historyRepository.save(history));
     }
 
+    @CacheEvict(value = "history", key = "#id")
     @Transactional
     @Override
     public void deleteHistory(UUID id) {
@@ -55,6 +61,7 @@ public class HistoryServiceImplementation implements HistoryService {
         historyRepository.deleteById(id);
     }
 
+    @Cacheable(value = "history", key = "#id")
     @Transactional
     @Override
     public HistoryResponseDto getHistory(UUID historyId) {

@@ -1,6 +1,9 @@
 package ru.springtest.service.implementation;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.springtest.domain.Contract;
@@ -24,6 +27,7 @@ public class ContractServiceImplementation implements ContractService {
     private final ContractMapper contractMapper;
     private final HistoryMapper historyMapper;
 
+    @CachePut(value = "contract", key = "#result.id()")
     @Transactional
     @Override
     public ContractResponseDto createContract(ContractCreateUpdateDto dto) {
@@ -33,6 +37,7 @@ public class ContractServiceImplementation implements ContractService {
         return contractMapper.toResponseDto(contractRepository.save(contract));
     }
 
+    @CachePut(value = "contract", key = "#result.id()")
     @Transactional
     @Override
     public ContractResponseDto updateContract(UUID id, ContractCreateUpdateDto dto) {
@@ -42,6 +47,7 @@ public class ContractServiceImplementation implements ContractService {
         return contractMapper.toResponseDto(contractRepository.save(contract));
     }
 
+    @CacheEvict(value = "contract", key = "#id")
     @Transactional
     @Override
     public void deleteContract (UUID id) {
@@ -51,6 +57,7 @@ public class ContractServiceImplementation implements ContractService {
         contractRepository.deleteById(id);
     }
 
+    @Cacheable(value = "contract", key = "#id")
     @Transactional
     @Override
     public ContractResponseDto getContract(UUID contractId) {
