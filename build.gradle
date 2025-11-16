@@ -46,8 +46,4 @@ dependencies {
 
 tasks.named('test') {
     useJUnitPlatform()
-    options.annotationProcessorPath = configurations.annotationProcessor
-    options.compilerArgs += [
-            '-Amapstruct.defaultComponentModel=spring'
-    ]
 }
