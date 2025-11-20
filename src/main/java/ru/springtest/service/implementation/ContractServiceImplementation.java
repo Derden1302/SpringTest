@@ -41,7 +41,7 @@ public class ContractServiceImplementation implements ContractService {
     @Transactional
     @Override
     public ContractResponseDto updateContract(UUID id, ContractCreateUpdateDto dto) {
-        Contract contract = contractRepository.findById(id).orElseThrow(()->new NotFoundException("Contract not found with id:" + id));
+        Contract contract = contractRepository.findById(id).orElseThrow(()->new NotFoundException("Contract not found with id: " + id));
         List<History> histories= historyMapper.toEntityListHistory(dto.historyDtos());
         contractMapper.changeContracts(contract, histories);
         return contractMapper.toResponseDto(contractRepository.save(contract));
@@ -52,7 +52,7 @@ public class ContractServiceImplementation implements ContractService {
     @Override
     public void deleteContract (UUID id) {
         if (!contractRepository.existsById(id)) {
-            throw new NotFoundException("Contract not found with id:" + id);
+            throw new NotFoundException("Contract not found with id: " + id);
         }
         contractRepository.deleteById(id);
     }
@@ -61,7 +61,7 @@ public class ContractServiceImplementation implements ContractService {
     @Transactional
     @Override
     public ContractResponseDto getContract(UUID contractId) {
-        Contract contract = contractRepository.findById(contractId).orElseThrow(()->new NotFoundException("Contract not found with id:" + contractId));
+        Contract contract = contractRepository.findById(contractId).orElseThrow(()->new NotFoundException("Contract not found with id: " + contractId));
         return contractMapper.toResponseDto(contract);
     }
 

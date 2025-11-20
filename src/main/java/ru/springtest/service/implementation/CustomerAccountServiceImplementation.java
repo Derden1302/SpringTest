@@ -38,7 +38,7 @@ public class CustomerAccountServiceImplementation implements CustomerAccountServ
     @Transactional
     @Override
     public CustomerAccountResponseDto getById(UUID id) {
-        Customer customer = customerRepository.findById(id).orElseThrow(()->new NotFoundException("Customer not found with id:" + id));
+        Customer customer = customerRepository.findById(id).orElseThrow(()->new NotFoundException("Customer not found with id: " + id));
         return mapper.toDto(
                 customer,
                 accountRepository.findAccountsByCustomerId(id));
@@ -48,7 +48,7 @@ public class CustomerAccountServiceImplementation implements CustomerAccountServ
     @Override
     @Transactional
     public CustomerAccountResponseDto updateWithAccount(CustomerAccountCreateUpdateDto dto, UUID id) {
-        Customer customer = customerRepository.findById(id).orElseThrow(()->new NotFoundException("Customer not found with id:" + id));
+        Customer customer = customerRepository.findById(id).orElseThrow(()->new NotFoundException("Customer not found with id: " + id));
         mapper.changeCustomer(customer, dto);
         customerRepository.save(customer);
         Account account = accountRepository.findAccountsByCustomerId(id);
@@ -61,6 +61,9 @@ public class CustomerAccountServiceImplementation implements CustomerAccountServ
     @Override
     @Transactional
     public void delete(UUID id) {
+        if (!customerRepository.existsById(id)) {
+            throw new NotFoundException("Customer not found with id: " + id);
+        }
         customerRepository.deleteById(id);
     }
 

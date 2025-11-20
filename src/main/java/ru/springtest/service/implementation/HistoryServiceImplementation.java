@@ -45,7 +45,7 @@ public class HistoryServiceImplementation implements HistoryService {
     @Transactional
     @Override
     public HistoryResponseDto updateHistory(UUID id, HistoryCreateUpdateDto dto) {
-        History history = historyRepository.findById(id).orElseThrow(()->new NotFoundException("History not found with id:" + id));
+        History history = historyRepository.findById(id).orElseThrow(()->new NotFoundException("History not found with id: " + id));
         List<Contract> contracts = contractMapper.toEntityListContract(dto.contractsDtos());
         historyMapper.changeHistory(history, contracts);
         return historyMapper.toResponseDto(historyRepository.save(history));

@@ -43,7 +43,7 @@ public class SellerServiceImplementation implements SellerService {
     @Transactional
     @Override
     public SellerItemResponseDto updateSeller(UUID id, SellerCreateUpdateDto dto) {
-        Seller seller = sellerRepository.findById(id).orElseThrow(() -> new NotFoundException("Seller not found!"));
+        Seller seller = sellerRepository.findById(id).orElseThrow(() -> new NotFoundException("Seller not found with id: " + id));
         List<Item> item = itemMapper.toEntity(dto.item(), seller);
         mapper.changeSeller(seller, item);
         return mapper.toDto(sellerRepository.save(seller));
@@ -53,7 +53,7 @@ public class SellerServiceImplementation implements SellerService {
     @Transactional
     @Override
     public SellerItemResponseDto getSeller(UUID id) {
-        Seller seller = sellerRepository.findById(id).orElseThrow(() -> new NotFoundException("Seller not found!"));
+        Seller seller = sellerRepository.findById(id).orElseThrow(() -> new NotFoundException("Seller not found with id: " + id));
         return mapper.toDto(seller);
     }
 
@@ -61,6 +61,9 @@ public class SellerServiceImplementation implements SellerService {
     @Transactional
     @Override
     public void deleteSeller(UUID id) {
+        if (!sellerRepository.existsById(id)) {
+            throw new NotFoundException("Seller not found with id: " + id);
+        }
         sellerRepository.deleteById(id);
     }
 
