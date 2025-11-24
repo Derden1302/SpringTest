@@ -1,5 +1,14 @@
 package ru.springtest.service;
 
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import ru.springtest.domain.Contract;
 import ru.springtest.domain.History;
 import ru.springtest.dto.ContractCreateUpdateDto;
@@ -9,11 +18,9 @@ import ru.springtest.exception.NotFoundException;
 import ru.springtest.mapper.ContractMapper;
 import ru.springtest.mapper.HistoryMapper;
 import ru.springtest.repository.ContractRepository;
-import ru.springtest.service.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
-import org.springframework.cache.interceptor.SimpleKeyGenerator;
 import ru.springtest.service.implementation.ContractServiceImplementation;
 
 import java.util.List;
@@ -23,113 +30,112 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@Testcontainers
+@SpringBootTest
 class ContractServiceTest {
-    @Mock
-    private ContractRepository contractRepository;
-    @Mock
-    private ContractMapper contractMapper;
-    @Mock
-    private HistoryMapper historyMapper;
-    @InjectMocks
-    private ContractServiceImplementation service;
-    @BeforeEach
-    void setup() {
-        MockitoAnnotations.openMocks(this);
-    }
+
+    @ServiceConnection
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14");
+    @ServiceConnection(name = "redis")
+    static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:8.2.3"))
+            .withExposedPorts(6379);
+
+    @Autowired
+    ContractService service;
+    @Autowired
+    ContractRepository contractRepository;
+
 
     @Test
+    @Transactional
+        // Откатываем транзакцию после теста, чтобы база была чистой
     void createContract_success() {
-        // given
-        UUID id = UUID.randomUUID();
         ContractCreateUpdateDto dto = new ContractCreateUpdateDto(
                 "TestContract",
                 List.of(new HistoryDto("TestHistory"))
         );
-        Contract contract = new Contract();
-        contract.setId(id);
-        History history = new History();
-        ContractResponseDto responseDto =
-                new ContractResponseDto(id, "TestContract", List.of(new HistoryDto("TestHistory")));
-        when(contractMapper.toEntity(dto)).thenReturn(contract);
-        when(historyMapper.toEntityListHistory(dto.historyDtos()))
-                .thenReturn(List.of(history));
-        when(contractRepository.save(contract)).thenReturn(contract);
-        when(contractMapper.toResponseDto(contract)).thenReturn(responseDto);
         ContractResponseDto result = service.createContract(dto);
-        assertThat(result.id()).isEqualTo(id);
-        verify(contractMapper).changeContracts(contract, List.of(history));
+        assertThat(result.id()).isNotNull();
+        assertThat(result.name()).isEqualTo("TestContract");
+        assertThat(result.history()).hasSize(1);
+
+        Contract savedContract = contractRepository.findById(result.id()).orElseThrow();
+        assertThat(savedContract.getName()).isEqualTo("TestContract");
+        assertThat(savedContract.getHistory()).hasSize(1);
+
     }
 
     @Test
+    @Transactional
     void updateContract_success() {
-        UUID id = UUID.randomUUID();
         ContractCreateUpdateDto dto = new ContractCreateUpdateDto(
-                "Updated Contract",
+                "TestContract",
                 List.of(new HistoryDto("TestHistory"))
         );
-        Contract existing = new Contract();
-        existing.setId(id);
-        History history = new History();
-        ContractResponseDto responseDto =
-                new ContractResponseDto(id, "Updated Contract", List.of(new HistoryDto("TestHistory")));
-        when(contractRepository.findById(id)).thenReturn(Optional.of(existing));
-        when(historyMapper.toEntityListHistory(dto.historyDtos()))
-                .thenReturn(List.of(history));
-        when(contractRepository.save(existing)).thenReturn(existing);
-        when(contractMapper.toResponseDto(existing)).thenReturn(responseDto);
-        ContractResponseDto result = service.updateContract(id, dto);
-        assertThat(result.name()).isEqualTo("Updated Contract");
-        verify(contractMapper).changeContracts(existing, List.of(history));
+        ContractResponseDto createdContract = service.createContract(dto);
+        UUID id = createdContract.id();
+        ContractCreateUpdateDto updateDto = new ContractCreateUpdateDto(
+                "UpdatedContract",
+                List.of(new HistoryDto("TestHistory")));
+        ContractResponseDto result = service.updateContract(id, updateDto);
+        assertThat(result.name()).isEqualTo("UpdatedContract");
+        Contract updatedEntity = contractRepository.findById(id).orElseThrow();
+        assertThat(updatedEntity.getName()).isEqualTo("UpdatedContract");
+        assertThat(updatedEntity.getHistory()).hasSize(1);
     }
 
     @Test
+    @Transactional
     void updateContract_notFound() {
         UUID id = UUID.randomUUID();
         ContractCreateUpdateDto dto = new ContractCreateUpdateDto(
                 "TestContract", List.of(new HistoryDto("TestHistory"))
         );
-        when(contractRepository.findById(id)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.updateContract(id, dto))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Contract not found with id: " + id);
-        verify(contractRepository, never()).save(any());
     }
 
     @Test
+    @Transactional
     void deleteContract_success() {
-        UUID id = UUID.randomUUID();
-        when(contractRepository.existsById(id)).thenReturn(true);
+        ContractCreateUpdateDto dto = new ContractCreateUpdateDto(
+                "TestContract",
+                List.of(new HistoryDto("TestHistory"))
+        );
+        ContractResponseDto createdContract = service.createContract(dto);
+        UUID id = createdContract.id();
         service.deleteContract(id);
-        verify(contractRepository).deleteById(id);
+        assertThat(contractRepository.findById(id)).isEmpty();
     }
 
     @Test
+    @Transactional
     void deleteContract_notFound() {
         UUID id = UUID.randomUUID();
-        when(contractRepository.existsById(id)).thenReturn(false);
         assertThatThrownBy(() -> service.deleteContract(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Contract not found with id: " + id);
-        verify(contractRepository, never()).deleteById(any());
     }
 
     @Test
+    @Transactional
     void getContract_success() {
-        UUID id = UUID.randomUUID();
-        Contract entity = new Contract();
-        entity.setId(id);
-        ContractResponseDto responseDto =
-                new ContractResponseDto(id, "TestContract", List.of());
-        when(contractRepository.findById(id)).thenReturn(Optional.of(entity));
-        when(contractMapper.toResponseDto(entity)).thenReturn(responseDto);
+        ContractCreateUpdateDto dto = new ContractCreateUpdateDto(
+                "TestContract",
+                List.of(new HistoryDto("TestHistory"))
+        );
+        ContractResponseDto createdContract = service.createContract(dto);
+        UUID id = createdContract.id();
         ContractResponseDto result = service.getContract(id);
         assertThat(result.id()).isEqualTo(id);
+        assertThat(result.name()).isEqualTo("TestContract");
     }
 
     @Test
+    @Transactional
     void getContract_notFound() {
         UUID id = UUID.randomUUID();
-        when(contractRepository.findById(id)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.getContract(id))
                 .isInstanceOf(NotFoundException.class)
                 .hasMessageContaining("Contract not found with id: " + id);

@@ -31,23 +31,23 @@ public class HistoryServiceImplementation implements HistoryService {
     private final HistoryMapper historyMapper;
 
 
-    @CachePut(value = "history", key = "result.id()")
+    @CachePut(value = "history", key = "#result.id()")
     @Transactional
     @Override
     public HistoryResponseDto createHistory(HistoryCreateUpdateDto dto){
         History history = historyMapper.toEntity(dto);
         List<Contract> contracts = contractMapper.toEntityListContract(dto.contractsDtos());
-        historyMapper.changeHistory(history, contracts);
+        historyMapper.changeHistory(history,dto, contracts);
         return historyMapper.toResponseDto(historyRepository.save(history));
     }
 
-    @CachePut(value = "history", key = "result.id()")
+    @CachePut(value = "history", key = "#result.id()")
     @Transactional
     @Override
     public HistoryResponseDto updateHistory(UUID id, HistoryCreateUpdateDto dto) {
         History history = historyRepository.findById(id).orElseThrow(()->new NotFoundException("History not found with id: " + id));
         List<Contract> contracts = contractMapper.toEntityListContract(dto.contractsDtos());
-        historyMapper.changeHistory(history, contracts);
+        historyMapper.changeHistory(history, dto, contracts);
         return historyMapper.toResponseDto(historyRepository.save(history));
     }
 
@@ -64,8 +64,8 @@ public class HistoryServiceImplementation implements HistoryService {
     @Cacheable(value = "history", key = "#id")
     @Transactional
     @Override
-    public HistoryResponseDto getHistory(UUID historyId) {
-        History history = historyRepository.findById(historyId).orElseThrow(()->new NotFoundException("History not found with id: " + historyId));
+    public HistoryResponseDto getHistory(UUID id) {
+        History history = historyRepository.findById(id).orElseThrow(()->new NotFoundException("History not found with id: " + id));
         return historyMapper.toResponseDto(history);
     }
 

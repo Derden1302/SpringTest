@@ -22,10 +22,9 @@ public interface ContractMapper {
 
     ContractDto toDto(Contract contract);
 
-    void changeContracts(@MappingTarget Contract contract, ContractCreateUpdateDto dto, List<History> history);
-
     @Mapping(target = "history", ignore = true)
-    default void changeContracts(@MappingTarget Contract contract, List<History> history) {
+    default void changeContracts(@MappingTarget Contract contract, ContractCreateUpdateDto dto, List<History> history) {
+        contract.setName(dto.name());
         contract.setHistory(history);
     };
 

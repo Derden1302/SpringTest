@@ -35,7 +35,7 @@ public class SellerServiceImplementation implements SellerService {
     public SellerItemResponseDto createSeller(SellerCreateUpdateDto dto) {
         Seller seller = mapper.toEntity(dto);
         List<Item> item = itemMapper.toEntity(dto.item(), seller);
-        mapper.changeSeller(seller,item);
+        mapper.changeSeller(seller, dto, item);
         return mapper.toDto(sellerRepository.save(seller));
     }
 
@@ -45,7 +45,7 @@ public class SellerServiceImplementation implements SellerService {
     public SellerItemResponseDto updateSeller(UUID id, SellerCreateUpdateDto dto) {
         Seller seller = sellerRepository.findById(id).orElseThrow(() -> new NotFoundException("Seller not found with id: " + id));
         List<Item> item = itemMapper.toEntity(dto.item(), seller);
-        mapper.changeSeller(seller, item);
+        mapper.changeSeller(seller, dto, item);
         return mapper.toDto(sellerRepository.save(seller));
     }
 

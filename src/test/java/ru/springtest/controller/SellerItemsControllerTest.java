@@ -4,206 +4,185 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.springtest.dto.*;
+import ru.springtest.dto.ItemCreateUpdateDto;
+import ru.springtest.dto.ItemDto;
+import ru.springtest.dto.SellerCreateUpdateDto;
+import ru.springtest.dto.SellerItemResponseDto;
 import ru.springtest.exception.NotFoundException;
-import ru.springtest.service.ContractService;
-import ru.springtest.service.CustomerAccountService;
 import ru.springtest.service.ItemService;
 import ru.springtest.service.SellerService;
 
 import java.util.List;
 import java.util.UUID;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = SellerItemsController.class)
 public class SellerItemsControllerTest {
     @Autowired
-    private MockMvc mockMvc;
+    MockMvc mockMvc;
     @Autowired
-    private ObjectMapper objectMapper;
-    @MockitoBean
-    private SellerService sellerService;
-    @MockitoBean
-    private ItemService itemService;
+    ObjectMapper mapper;
+
+    @MockBean
+    SellerService sellerService;
+    @MockBean
+    ItemService itemService;
+
+    static final UUID SELLER_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+    static final UUID ITEM_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174001");
+    static final String SELLER_NAME = "TestSeller";
+    static final String ITEM_NAME = "TestItem";
 
     @Test
     void createSeller_validRequest_returns201() throws Exception {
         SellerCreateUpdateDto request = new SellerCreateUpdateDto(
-                "TestSeller",
-                List.of(new ItemDto("TestItem"))
+                SELLER_NAME, List.of(new ItemDto(ITEM_NAME))
         );
         SellerItemResponseDto response = new SellerItemResponseDto(
-                UUID.randomUUID(),
-                "TestSeller",
-                List.of(new ItemDto("TestItem"))
+                SELLER_ID, SELLER_NAME, List.of(new ItemDto(ITEM_NAME))
         );
         when(sellerService.createSeller(request)).thenReturn(response);
-        mockMvc.perform(post("/seller/v2/api/seller")
+        mockMvc.perform(post("/sellers-items/v2/api/seller")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("TestSeller"));
+                .andExpect(jsonPath("$.id").value(SELLER_ID.toString()))
+                .andExpect(jsonPath("$.name").value(SELLER_NAME))
+                .andExpect(jsonPath("$.item[0].name").value(ITEM_NAME));
     }
 
     @Test
-    void createSeller_blankName_returns400() throws Exception {
+    void createSeller_invalidRequest_returns400() throws Exception {
         SellerCreateUpdateDto request = new SellerCreateUpdateDto(
-                "   ",
-                List.of(new ItemDto("Item1"))
+                "", List.of(new ItemDto(ITEM_NAME))
         );
-
-        mockMvc.perform(post("/seller/v2/api/seller")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        mockMvc.perform(post("/sellers-items/v2/api/seller")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void createSeller_emptyItems_returns400() throws Exception {
+    void updateSeller_validRequest_returns200() throws Exception {
         SellerCreateUpdateDto request = new SellerCreateUpdateDto(
-                "Seller",
-                List.of()
-        );
-
-        mockMvc.perform(post("/seller/v2/api/seller")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
-    }
-
-
-    @Test
-    void updateSeller_validRequest_returns201() throws Exception {
-        UUID id = UUID.randomUUID();
-        SellerCreateUpdateDto request = new SellerCreateUpdateDto(
-                "TestSeller",
-                List.of(new ItemDto("TestItem"))
+                "UpdatedSeller", List.of(new ItemDto("UpdatedItem"))
         );
         SellerItemResponseDto response = new SellerItemResponseDto(
-                id,
-                "TestSeller",
-                List.of(new ItemDto("TestItem"))
+                SELLER_ID, "UpdatedSeller", List.of(new ItemDto("UpdatedItem"))
         );
-        when(sellerService.updateSeller(id, request)).thenReturn(response);
-        mockMvc.perform(put("/seller/v2/api/seller/" + id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+        when(sellerService.updateSeller(eq(SELLER_ID), any())).thenReturn(response);
+        mockMvc.perform(put("/sellers-items/v2/api/seller/" + SELLER_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("TestSeller"));
+                .andExpect(jsonPath("$.id").value(SELLER_ID.toString()))
+                .andExpect(jsonPath("$.name").value("UpdatedSeller"))
+                .andExpect(jsonPath("$.item[0].name").value("UpdatedItem"));
     }
 
     @Test
-    void updateSeller_invalidUUID_returns400() throws Exception {
-        SellerCreateUpdateDto request = new SellerCreateUpdateDto("Seller", List.of(new ItemDto("Item")));
-
-        mockMvc.perform(put("/seller/v2/api/seller/INVALID_UUID")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+    void updateSeller_invalidRequest_returns400() throws Exception {
+        SellerCreateUpdateDto request = new SellerCreateUpdateDto(
+                "", List.of(new ItemDto(ITEM_NAME))
+        );
+        mockMvc.perform(put("/sellers-items/v2/api/seller/" + SELLER_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void updateSeller_entityNotFound_returns404() throws Exception {
-        UUID id = UUID.randomUUID();
-        SellerCreateUpdateDto request = new SellerCreateUpdateDto("Seller", List.of(new ItemDto("Item")));
-
-        when(sellerService.updateSeller(eq(id), any()))
-                .thenThrow(new NotFoundException("Not found"));
-
-        mockMvc.perform(put("/seller/v2/api/seller/" + id)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isNotFound());
+    void updateSeller_notFound_returns404() throws Exception {
+        SellerCreateUpdateDto request = new SellerCreateUpdateDto(
+                "UpdatedSeller", List.of(new ItemDto("UpdatedItem"))
+        );
+        when(sellerService.updateSeller(eq(SELLER_ID), any()))
+                .thenThrow(new NotFoundException("Seller not found with id: " + SELLER_ID));
+        mockMvc.perform(put("/sellers-items/v2/api/seller/" +  SELLER_ID)
+        .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Seller not found with id: " + SELLER_ID));
     }
 
-
     @Test
-    void deleteSeller_validRequest_returns204() throws Exception {
-        UUID id = UUID.randomUUID();
-
-        doNothing().when(sellerService).deleteSeller(id);
-
-        mockMvc.perform(delete("/seller/v2/api/seller/" + id))
+    void deleteBySeller_validRequest_returns204() throws Exception {
+        doNothing().when(sellerService).deleteSeller(SELLER_ID);
+        mockMvc.perform(delete("/sellers-items/v2/api/seller/" + SELLER_ID))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void deleteSeller_notFound_returns404() throws Exception {
-        UUID id = UUID.randomUUID();
-
-        doThrow(new NotFoundException("Not found"))
-                .when(sellerService).deleteSeller(id);
-
-        mockMvc.perform(delete("/seller/v2/api/seller/" + id))
+    void deleteBySeller_notFound_returns404() throws Exception {
+        doThrow(new NotFoundException("Seller not found with id: " + SELLER_ID))
+                .when(sellerService).deleteSeller(SELLER_ID);
+        mockMvc.perform(delete("/sellers-items/v2/api/seller/" + SELLER_ID))
                 .andExpect(status().isNotFound());
     }
 
-
     @Test
     void getSeller_validRequest_returns200() throws Exception {
-        UUID id = UUID.randomUUID();
         SellerItemResponseDto response = new SellerItemResponseDto(
-                id,
-                "TestSeller",
-                List.of(new ItemDto("TestItem"))
+                SELLER_ID, SELLER_NAME, List.of(new ItemDto(ITEM_NAME))
         );
-        when(sellerService.getSeller(id)).thenReturn(response);
-        mockMvc.perform(get("/seller/v2/api/seller/" + id))
-                        .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.name").value("TestSeller"));
+        when(sellerService.getSeller(SELLER_ID)).thenReturn(response);
+        mockMvc.perform(get("/sellers-items/v2/api/seller/" + SELLER_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(SELLER_ID.toString()))
+                .andExpect(jsonPath("$.name").value(SELLER_NAME))
+                .andExpect(jsonPath("$.item[0].name").value(ITEM_NAME));
     }
 
     @Test
     void getSeller_notFound_returns404() throws Exception {
-        UUID id = UUID.randomUUID();
-
-        when(sellerService.getSeller(id))
-                .thenThrow(new NotFoundException("Seller not found"));
-
-        mockMvc.perform(get("/seller/v2/api/seller/" + id))
+        doThrow(new NotFoundException("Seller not found with id: " + SELLER_ID))
+        .when(sellerService).getSeller(SELLER_ID);
+        mockMvc.perform(get("/sellers-items/v2/api/seller/" + SELLER_ID))
                 .andExpect(status().isNotFound());
     }
 
-
     @Test
     void updateItem_validRequest_returns204() throws Exception {
-        UUID id = UUID.randomUUID();
-        ItemCreateUpdateDto request = new ItemCreateUpdateDto(
-                id,
-                "TestItem"
-        );
-        ItemDto response = new ItemDto("TestItem");
-        when(itemService.updateItem(id, request)).thenReturn(response);
-        mockMvc.perform(put("/seller/v2/api/item/" + id)
+        ItemCreateUpdateDto request = new ItemCreateUpdateDto(SELLER_ID, ITEM_NAME);
+        ItemDto response = new ItemDto(ITEM_NAME);
+        when(itemService.updateItem(SELLER_ID, request)).thenReturn(response);
+        mockMvc.perform(put("/sellers-items/v2/api/item/" + SELLER_ID)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(request)))
+                .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.name").value("TestItem"));
-
+                .andExpect(jsonPath("$.name").value(ITEM_NAME));
     }
 
     @Test
-    void updateItem_nullSellerId_returns400() throws Exception {
-        ItemCreateUpdateDto request = new ItemCreateUpdateDto(
-                null,
-                "Item"
-        );
-
-        mockMvc.perform(put("/seller/v2/api/item/" + UUID.randomUUID())
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(request)))
+    void updateItem_invalidRequest_returns404_withMessage() throws Exception {
+        ItemCreateUpdateDto request = new ItemCreateUpdateDto(SELLER_ID, "");
+        mockMvc.perform(put("/sellers-items/v2/api/item/" + ITEM_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
-
-
+    @Test
+    void updateItem_notFound_returns404() throws Exception {
+        ItemCreateUpdateDto request = new ItemCreateUpdateDto(SELLER_ID, ITEM_NAME);
+        when(itemService.updateItem(eq(ITEM_ID),any()))
+                .thenThrow(new NotFoundException("Item not found with id: " + ITEM_ID));
+        mockMvc.perform(put("/sellers-items/v2/api/item/" + ITEM_ID)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("Item not found with id: " + ITEM_ID));
+    }
 
 }
+

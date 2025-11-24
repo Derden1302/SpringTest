@@ -1,140 +1,133 @@
 package ru.springtest.service;
 
-import org.junit.jupiter.api.BeforeEach;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 import ru.springtest.domain.Contract;
 import ru.springtest.domain.History;
 import ru.springtest.dto.*;
 import ru.springtest.exception.NotFoundException;
-import ru.springtest.mapper.ContractMapper;
-import ru.springtest.mapper.HistoryMapper;
-import ru.springtest.repository.ContractRepository;
 import ru.springtest.repository.HistoryRepository;
-import ru.springtest.service.implementation.ContractServiceImplementation;
-import ru.springtest.service.implementation.HistoryServiceImplementation;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
+@Testcontainers
+@SpringBootTest
 public class HistoryServiceTest {
-    @Mock
-    private HistoryRepository historyRepository;
-    @Mock
-    private ContractMapper contractMapper;
-    @Mock
-    private HistoryMapper historyMapper;
-    @InjectMocks
-    private HistoryServiceImplementation service;
-    @BeforeEach
-    void setup() {
-        MockitoAnnotations.openMocks(this);
-    }
+
+    @ServiceConnection
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14");
+    @ServiceConnection(name = "redis")
+    static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:8.2.3"))
+            .withExposedPorts(6379);
+
+    @Autowired
+    HistoryService service;
+    @Autowired
+    HistoryRepository historyRepository;
 
     @Test
-    void createHistory_success()
-    {
-        UUID id = UUID.randomUUID();
+    @Transactional
+
+    void createHistory_success() {
         HistoryCreateUpdateDto dto = new HistoryCreateUpdateDto(
                 "TestHistory",
                 List.of(new ContractDto("TestContract"))
         );
-        History history = new History();
-        history.setId(id);
-        Contract contract = new Contract();
-        HistoryResponseDto responseDto = new HistoryResponseDto(
-                id, "TestHistory", List.of(new ContractDto("TestContract")));
-        when(historyMapper.toEntity(dto)).thenReturn(history);
-        when(contractMapper.toEntityListContract(dto.contractsDtos())).thenReturn(List.of(contract));
-        when(historyRepository.save(history)).thenReturn(history);
-        when(historyMapper.toResponseDto(history)).thenReturn(responseDto);
         HistoryResponseDto result = service.createHistory(dto);
-        assertThat(result.id()).isEqualTo(id);
-        verify(historyMapper).changeHistory(history,List.of(contract));
-    }
-
-    @Test
-    void updateHistory_success(){
-        UUID id = UUID.randomUUID();
-        HistoryCreateUpdateDto dto = new HistoryCreateUpdateDto(
-                "TestHistory",
-                List.of(new ContractDto("TestContract"))
-        );
-        History existing = new History();
-        existing.setId(id);
-        Contract contract = new Contract();
-        HistoryResponseDto responseDto = new HistoryResponseDto(
-                id, "TestHistory", List.of(new ContractDto("TestContract")));
-        when(historyRepository.findById(id)).thenReturn(Optional.of(existing));
-        when(contractMapper.toEntityListContract(dto.contractsDtos())).thenReturn(List.of(contract));
-        when(historyRepository.save(existing)).thenReturn(existing);
-        when(historyMapper.toResponseDto(existing)).thenReturn(responseDto);
-        HistoryResponseDto result = service.updateHistory(id, dto);
+        assertThat(result.id()).isNotNull();
         assertThat(result.name()).isEqualTo("TestHistory");
-        verify(historyMapper).changeHistory(existing,List.of(contract));
+        assertThat(result.contract()).hasSize(1);
+
+        History savedHistory = historyRepository.findById(result.id()).orElseThrow();
+        assertThat(savedHistory.getName()).isEqualTo("TestHistory");
+        assertThat(savedHistory.getContract()).hasSize(1);
     }
 
     @Test
-    void updateHistory_notFound(){
-        UUID id = UUID.randomUUID();
+    @Transactional
+    void updateHistory_success() {
         HistoryCreateUpdateDto dto = new HistoryCreateUpdateDto(
                 "TestHistory",
                 List.of(new ContractDto("TestContract"))
         );
-        when(historyRepository.findById(id)).thenReturn(Optional.empty());
+        HistoryResponseDto createdHistory = service.createHistory(dto);
+        UUID id = createdHistory.id();
+        HistoryCreateUpdateDto updateDto = new HistoryCreateUpdateDto(
+                "UpdatedHistory",
+                List.of(new ContractDto("TestContract")));
+        HistoryResponseDto result = service.updateHistory(id, updateDto);
+        assertThat(result.name()).isEqualTo("UpdatedHistory");
+        History updatedEntity = historyRepository.findById(id).orElseThrow();
+        assertThat(updatedEntity.getName()).isEqualTo("UpdatedHistory");
+        assertThat(updatedEntity.getContract()).hasSize(1);
+    }
+
+    @Test
+    @Transactional
+    void updateHistory_notFound() {
+        UUID id = UUID.randomUUID();
+        HistoryCreateUpdateDto dto = new HistoryCreateUpdateDto(
+                "TestHistory", List.of(new ContractDto("TestContract"))
+        );
         assertThatThrownBy(() -> service.updateHistory(id, dto))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("History not found with id: " + id);
-        verify(historyRepository, never()).save(any());
+                .hasMessageContaining("History not found with id: " + id);
     }
 
-
     @Test
-    void deleteHistory_success(){
-        UUID id = UUID.randomUUID();
-        when(historyRepository.existsById(id)).thenReturn(true);
+    @Transactional
+    void deleteHistory_success() {
+        HistoryCreateUpdateDto dto = new HistoryCreateUpdateDto(
+                "TestHistory",
+                List.of(new ContractDto("TestContract"))
+        );
+        HistoryResponseDto createdHistory = service.createHistory(dto);
+        UUID id = createdHistory.id();
         service.deleteHistory(id);
-        verify(historyRepository).deleteById(id);
+        assertThat(historyRepository.findById(id)).isEmpty();
     }
 
     @Test
-    void deleteHistory_notFound(){
+    @Transactional
+    void deleteHistory_notFound() {
         UUID id = UUID.randomUUID();
-        when(historyRepository.existsById(id)).thenReturn(false);
         assertThatThrownBy(() -> service.deleteHistory(id))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("History not found with id: " + id);
-        verify(historyRepository, never()).deleteById(any());
+                .hasMessageContaining("History not found with id: " + id);
     }
 
     @Test
-    void getHistory_success(){
-        UUID id = UUID.randomUUID();
-        History history = new History();
-        history.setId(id);
-        HistoryResponseDto responseDto = new HistoryResponseDto(
-                id, "TestHistory", List.of(new ContractDto("TestContract")));
-        when(historyRepository.findById(id)).thenReturn(Optional.of(history));
-        when(historyMapper.toResponseDto(history)).thenReturn(responseDto);
+    @Transactional
+    void getHistory_success() {
+        HistoryCreateUpdateDto dto = new HistoryCreateUpdateDto(
+                "TestHistory",
+                List.of(new ContractDto("TestContract"))
+        );
+        HistoryResponseDto createdHistory = service.createHistory(dto);
+        UUID id = createdHistory.id();
         HistoryResponseDto result = service.getHistory(id);
         assertThat(result.id()).isEqualTo(id);
+        assertThat(result.name()).isEqualTo("TestHistory");
     }
 
     @Test
-    void getHistory_notFound(){
+    @Transactional
+    void getHistory_notFound() {
         UUID id = UUID.randomUUID();
-        when(historyRepository.findById(id)).thenReturn(Optional.empty());
         assertThatThrownBy(() -> service.getHistory(id))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessage("History not found with id: " + id);
+                .hasMessageContaining("History not found with id: " + id);
     }
 
 }

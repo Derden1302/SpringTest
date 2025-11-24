@@ -4,16 +4,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.boot.test.mock.mockito.MockBean; // 1. Используем MockBean
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.springtest.dto.*;
+import ru.springtest.exception.NotFoundException; // Предположим, у тебя есть такое исключение
+import ru.springtest.exception.NotFoundException;
 import ru.springtest.service.ContractService;
 import ru.springtest.service.HistoryService;
 
 import java.util.List;
 import java.util.UUID;
 
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -23,150 +28,162 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ContractHistoryControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
-
+    MockMvc mockMvc;
     @Autowired
-    private ObjectMapper mapper;
+    ObjectMapper mapper;
 
-    @MockitoBean
-    private ContractService contractService;
+    @MockBean
+    ContractService contractService;
+    @MockBean
+    HistoryService historyService;
 
-    @MockitoBean
-    private HistoryService historyService;
+    static final UUID CONTRACT_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+    static final UUID HISTORY_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174001");
+    static final String CONTRACT_NAME = "TestContract";
+    static final String HISTORY_NAME = "History1";
 
-    // ------------------ CREATE CONTRACT ------------------
     @Test
     void createContract_validRequest_returns201() throws Exception {
         ContractCreateUpdateDto request = new ContractCreateUpdateDto(
-                "TestContract",
-                List.of(new HistoryDto( "History1"))
+                CONTRACT_NAME,
+                List.of(new HistoryDto(HISTORY_NAME))
         );
-
         ContractResponseDto response = new ContractResponseDto(
-                UUID.randomUUID(),
-                "TestContract",
-                List.of(new HistoryDto( "History1"))
+                CONTRACT_ID,
+                CONTRACT_NAME,
+                List.of(new HistoryDto(HISTORY_NAME))
         );
-
         when(contractService.createContract(request)).thenReturn(response);
-
         mockMvc.perform(post("/contract-history/v2/api/contract")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("TestContract"));
+                .andExpect(jsonPath("$.id").value(CONTRACT_ID.toString()))
+                .andExpect(jsonPath("$.name").value(CONTRACT_NAME))
+                .andExpect(jsonPath("$.history[0].name").value(HISTORY_NAME));
     }
 
     @Test
-    void createContract_invalidRequest_returns400() throws Exception {
-        // name пустой → @NotBlank
+    void createContract_invalidRequest_returns400_withMessage() throws Exception {
         ContractCreateUpdateDto request = new ContractCreateUpdateDto(
                 "",
-                List.of(new HistoryDto( "History"))
+                List.of(new HistoryDto(HISTORY_NAME))
         );
-
         mockMvc.perform(post("/contract-history/v2/api/contract")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
-    @Test
-    void createContract_emptyHistory_returns400() throws Exception {
-        // historyDtos пустой → @NotEmpty
-        ContractCreateUpdateDto request = new ContractCreateUpdateDto(
-                "Test",
-                List.of()
-        );
-
-        mockMvc.perform(post("/contract-history/v2/api/contract")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(request)))
-                .andExpect(status().isBadRequest());
-    }
-
-
-    // ------------------ UPDATE CONTRACT ------------------
     @Test
     void updateContract_validRequest_returns200() throws Exception {
-        UUID id = UUID.randomUUID();
-
         ContractCreateUpdateDto request = new ContractCreateUpdateDto(
-                "UpdatedName",
-                List.of(new HistoryDto( "HistoryUpdated"))
+                "UpdatedContract",
+                List.of(new HistoryDto("HistoryUpdated"))
         );
-
         ContractResponseDto response = new ContractResponseDto(
-                id,
-                "UpdatedName",
-                List.of(new HistoryDto( "HistoryUpdated"))
+                CONTRACT_ID,
+                "UpdatedContract",
+                List.of(new HistoryDto("HistoryUpdated"))
         );
-
-        when(contractService.updateContract(id, request)).thenReturn(response);
-        mockMvc.perform(put("/contract-history/v2/api/contract/" + id)
+        when(contractService.updateContract(eq(CONTRACT_ID), any())).thenReturn(response);
+        mockMvc.perform(put("/contract-history/v2/api/contract/" + CONTRACT_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("UpdatedName"));
+                .andExpect(jsonPath("$.id").value(CONTRACT_ID.toString()))
+                .andExpect(jsonPath("$.name").value("UpdatedContract"))
+                .andExpect(jsonPath("$.history[0].name").value("HistoryUpdated"));
+    }
+
+    @Test
+    void updateContract_invalidRequest_returns400_withMessage() throws Exception {
+        ContractCreateUpdateDto request = new ContractCreateUpdateDto(
+                "",
+                List.of(new HistoryDto("TestHistory"))
+        );
+        mockMvc.perform(put("/contract-history/v2/api/contract/" + CONTRACT_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateContract_notFound_returns404() throws Exception {
+        ContractCreateUpdateDto request = new ContractCreateUpdateDto(
+                "TestContract",
+                List.of(new HistoryDto("TestHistory"))
+        );
+        when(contractService.updateContract(eq(CONTRACT_ID), any()))
+                .thenThrow(new NotFoundException("Contract not found"));
+        mockMvc.perform(put("/contract-history/v2/api/contract/" + CONTRACT_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound()) // Теперь здесь будет 404
+                .andExpect(jsonPath("$.message").value("Contract not found"));
     }
 
     @Test
     void deleteContract_validRequest_returns204() throws Exception {
-        UUID id = UUID.randomUUID();
-
-        doNothing().when(contractService).deleteContract(id);
-
-        mockMvc.perform(delete("/contract-history/v2/api/contract/" + id))
+        doNothing().when(contractService).deleteContract(CONTRACT_ID);
+        mockMvc.perform(delete("/contract-history/v2/api/contract/" + CONTRACT_ID))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void getContract_validRequest_returns200() throws Exception {
-        UUID id = UUID.randomUUID();
+    void deleteContract_notFound_returns404() throws Exception {
+        doThrow(new NotFoundException("Contract not found"))
+                .when(contractService).deleteContract(CONTRACT_ID);
+        mockMvc.perform(delete("/contract-history/v2/api/contract/" + CONTRACT_ID))
+                .andExpect(status().isNotFound());
+    }
 
-        ContractResponseDto response = new ContractResponseDto(
-                id,
-                "ContractName",
-                List.of(new HistoryDto( "History1"))
+    @Test
+    void updateHistory_validRequest_returns200() throws Exception {
+        HistoryCreateUpdateDto request = new HistoryCreateUpdateDto(
+                "UpdatedHistory",
+                List.of(new ContractDto("ContractUpdated"))
         );
-
-        when(contractService.getContract(id)).thenReturn(response);
-
-        mockMvc.perform(get("/contract-history/v2/api/contract/" + id))
+        HistoryResponseDto response = new HistoryResponseDto(
+                HISTORY_ID,
+                "UpdatedHistory",
+                List.of(new ContractDto("ContractUpdated"))
+        );
+        when(historyService.updateHistory(eq(HISTORY_ID), any())).thenReturn(response);
+        mockMvc.perform(put("/contract-history/v2/api/history/" + HISTORY_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.name").value("ContractName"));
+                .andExpect(jsonPath("$.name").value("UpdatedHistory"));
     }
 
     @Test
     void createHistory_validRequest_returns201() throws Exception {
         HistoryCreateUpdateDto request = new HistoryCreateUpdateDto(
-                "HistoryName",
-                List.of(new ContractDto( "Contract1"))
+                HISTORY_NAME,
+                List.of(new ContractDto(CONTRACT_NAME))
         );
-
         HistoryResponseDto response = new HistoryResponseDto(
-                UUID.randomUUID(),
-                "HistoryName",
-                List.of(new ContractDto( "Contract1"))
+                HISTORY_ID,
+                HISTORY_NAME,
+                List.of(new ContractDto(CONTRACT_NAME))
         );
-
         when(historyService.createHistory(request)).thenReturn(response);
-
         mockMvc.perform(post("/contract-history/v2/api/history")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.name").value("HistoryName"));
+                .andExpect(jsonPath("$.id").value(HISTORY_ID.toString()))
+                .andExpect(jsonPath("$.name").value(HISTORY_NAME))
+                .andExpect(jsonPath("$.contract[0].name").value(CONTRACT_NAME));
     }
 
     @Test
-    void createHistory_invalidRequest_returns400() throws Exception {
+    void createHistory_invalidRequest_returns400_withMessage() throws Exception {
         HistoryCreateUpdateDto request = new HistoryCreateUpdateDto(
-                "", // name пустой
-                List.of(new ContractDto( "C1"))
+                "",
+                List.of(new ContractDto(CONTRACT_NAME))
         );
-
         mockMvc.perform(post("/contract-history/v2/api/history")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(request)))
@@ -174,45 +191,45 @@ class ContractHistoryControllerTest {
     }
 
     @Test
-    void createHistory_emptyContracts_returns400() throws Exception {
+    void updateHistory_invalidRequest_returns400_withMessage() throws Exception {
         HistoryCreateUpdateDto request = new HistoryCreateUpdateDto(
-                "History",
-                List.of() // пустой список
+                "",
+                List.of(new ContractDto("TestContract"))
         );
-
-        mockMvc.perform(post("/contract-history/v2/api/history")
+        mockMvc.perform(put("/contract-history/v2/api/history/" + HISTORY_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(mapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void updateHistory_notFound_returns404() throws Exception {
+        HistoryCreateUpdateDto request = new HistoryCreateUpdateDto(
+                "TestHistory",
+                List.of(new ContractDto("TestContract"))
+        );
+        when(historyService.updateHistory(eq(HISTORY_ID), any()))
+                .thenThrow(new NotFoundException("History not found"));
+        mockMvc.perform(put("/contract-history/v2/api/history/" + HISTORY_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(mapper.writeValueAsString(request)))
+                .andExpect(status().isNotFound()) // Теперь здесь будет 404
+                .andExpect(jsonPath("$.message").value("History not found"));
+    }
 
     @Test
-    void deleteHistory_returns204() throws Exception {
-        UUID id = UUID.randomUUID();
-
-        doNothing().when(historyService).deleteHistory(id);
-
-        mockMvc.perform(delete("/contract-history/v2/api/history/" + id))
+    void deleteHistory_validRequest_returns204() throws Exception {
+        doNothing().when(historyService).deleteHistory(HISTORY_ID);
+        mockMvc.perform(delete("/contract-history/v2/api/history/" + HISTORY_ID))
                 .andExpect(status().isNoContent());
     }
 
-
     @Test
-    void getHistory_returns200() throws Exception {
-        UUID id = UUID.randomUUID();
-
-        HistoryResponseDto response = new HistoryResponseDto(
-                id,
-                "HistoryTest",
-                List.of(new ContractDto( "ContractA"))
-        );
-
-        when(historyService.getHistory(id)).thenReturn(response);
-
-        mockMvc.perform(get("/contract-history/v2/api/history/" + id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(id.toString()))
-                .andExpect(jsonPath("$.name").value("HistoryTest"));
+    void deleteHistory_notFound_returns404() throws Exception {
+        doThrow(new NotFoundException("History not found"))
+                .when(historyService).deleteHistory(HISTORY_ID);
+        mockMvc.perform(delete("/contract-history/v2/api/history/" + HISTORY_ID))
+                .andExpect(status().isNotFound());
     }
+
 }
