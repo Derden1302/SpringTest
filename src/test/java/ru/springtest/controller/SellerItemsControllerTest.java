@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.springtest.dto.ItemCreateUpdateDto;
 import ru.springtest.dto.ItemDto;
@@ -33,9 +34,9 @@ public class SellerItemsControllerTest {
     @Autowired
     ObjectMapper mapper;
 
-    @MockBean
+    @MockitoBean
     SellerService sellerService;
-    @MockBean
+    @MockitoBean
     ItemService itemService;
 
     static final UUID SELLER_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");

@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.springtest.dto.CustomerAccountCreateUpdateDto;
 import ru.springtest.dto.CustomerAccountResponseDto;
@@ -31,7 +32,7 @@ public class CustomerAccountControllerTest {
     @Autowired
     ObjectMapper mapper;
 
-    @MockBean
+    @MockitoBean
     CustomerAccountService service;
 
     static final UUID CUSTOMER_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
