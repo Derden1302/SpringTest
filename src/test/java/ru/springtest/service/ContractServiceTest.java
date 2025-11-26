@@ -1,66 +1,51 @@
 package ru.springtest.service;
 
 import jakarta.transaction.Transactional;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 import ru.springtest.domain.Contract;
-import ru.springtest.domain.History;
 import ru.springtest.dto.ContractCreateUpdateDto;
 import ru.springtest.dto.ContractResponseDto;
 import ru.springtest.dto.HistoryDto;
 import ru.springtest.exception.NotFoundException;
-import ru.springtest.mapper.ContractMapper;
-import ru.springtest.mapper.HistoryMapper;
 import ru.springtest.repository.ContractRepository;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.*;
-import ru.springtest.service.implementation.ContractServiceImplementation;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Testcontainers
 @SpringBootTest
-class ContractServiceTest {
-
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14");
-    @ServiceConnection(name = "redis")
-    static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:8.2.3"))
-            .withExposedPorts(6379);
+class ContractServiceTest extends AbstractIntegrationTest{
 
     @Autowired
     ContractService service;
     @Autowired
     ContractRepository contractRepository;
 
+    static final UUID CONTRACT_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+    static final String CONTRACT_NAME = "TestContract";
+    static final String HISTORY_NAME = "TestHistory";
+
 
     @Test
     @Transactional
-        // Откатываем транзакцию после теста, чтобы база была чистой
     void createContract_success() {
         ContractCreateUpdateDto dto = new ContractCreateUpdateDto(
-                "TestContract",
-                List.of(new HistoryDto("TestHistory"))
+                CONTRACT_NAME,
+                List.of(new HistoryDto(HISTORY_NAME))
         );
         ContractResponseDto result = service.createContract(dto);
         assertThat(result.id()).isNotNull();
-        assertThat(result.name()).isEqualTo("TestContract");
+        assertThat(result.name()).isEqualTo(CONTRACT_NAME);
         assertThat(result.history()).hasSize(1);
 
         Contract savedContract = contractRepository.findById(result.id()).orElseThrow();
-        assertThat(savedContract.getName()).isEqualTo("TestContract");
+        assertThat(savedContract.getName()).isEqualTo(CONTRACT_NAME);
         assertThat(savedContract.getHistory()).hasSize(1);
 
     }
@@ -69,17 +54,16 @@ class ContractServiceTest {
     @Transactional
     void updateContract_success() {
         ContractCreateUpdateDto dto = new ContractCreateUpdateDto(
-                "TestContract",
-                List.of(new HistoryDto("TestHistory"))
+                CONTRACT_NAME,
+                List.of(new HistoryDto(HISTORY_NAME))
         );
-        ContractResponseDto createdContract = service.createContract(dto);
-        UUID id = createdContract.id();
+        ContractResponseDto created = service.createContract(dto);
         ContractCreateUpdateDto updateDto = new ContractCreateUpdateDto(
                 "UpdatedContract",
-                List.of(new HistoryDto("TestHistory")));
-        ContractResponseDto result = service.updateContract(id, updateDto);
+                List.of(new HistoryDto(HISTORY_NAME)));
+        ContractResponseDto result = service.updateContract(created.id(), updateDto);
         assertThat(result.name()).isEqualTo("UpdatedContract");
-        Contract updatedEntity = contractRepository.findById(id).orElseThrow();
+        Contract updatedEntity = contractRepository.findById(created.id()).orElseThrow();
         assertThat(updatedEntity.getName()).isEqualTo("UpdatedContract");
         assertThat(updatedEntity.getHistory()).hasSize(1);
     }
@@ -87,57 +71,52 @@ class ContractServiceTest {
     @Test
     @Transactional
     void updateContract_notFound() {
-        UUID id = UUID.randomUUID();
         ContractCreateUpdateDto dto = new ContractCreateUpdateDto(
-                "TestContract", List.of(new HistoryDto("TestHistory"))
+                CONTRACT_NAME, List.of(new HistoryDto(HISTORY_NAME))
         );
-        assertThatThrownBy(() -> service.updateContract(id, dto))
+        assertThatThrownBy(() -> service.updateContract(CONTRACT_ID, dto))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Contract not found with id: " + id);
+                .hasMessageContaining("Contract not found with id: " + CONTRACT_ID);
     }
 
     @Test
     @Transactional
     void deleteContract_success() {
         ContractCreateUpdateDto dto = new ContractCreateUpdateDto(
-                "TestContract",
-                List.of(new HistoryDto("TestHistory"))
+                CONTRACT_NAME,
+                List.of(new HistoryDto(HISTORY_NAME))
         );
-        ContractResponseDto createdContract = service.createContract(dto);
-        UUID id = createdContract.id();
-        service.deleteContract(id);
-        assertThat(contractRepository.findById(id)).isEmpty();
+        ContractResponseDto created = service.createContract(dto);
+        service.deleteContract(created.id());
+        assertThat(contractRepository.findById(created.id())).isEmpty();
     }
 
     @Test
     @Transactional
     void deleteContract_notFound() {
-        UUID id = UUID.randomUUID();
-        assertThatThrownBy(() -> service.deleteContract(id))
+        assertThatThrownBy(() -> service.deleteContract(CONTRACT_ID))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Contract not found with id: " + id);
+                .hasMessageContaining("Contract not found with id: " + CONTRACT_ID);
     }
 
     @Test
     @Transactional
     void getContract_success() {
         ContractCreateUpdateDto dto = new ContractCreateUpdateDto(
-                "TestContract",
-                List.of(new HistoryDto("TestHistory"))
+                CONTRACT_NAME,
+                List.of(new HistoryDto(HISTORY_NAME))
         );
-        ContractResponseDto createdContract = service.createContract(dto);
-        UUID id = createdContract.id();
-        ContractResponseDto result = service.getContract(id);
-        assertThat(result.id()).isEqualTo(id);
-        assertThat(result.name()).isEqualTo("TestContract");
+        ContractResponseDto created = service.createContract(dto);
+        ContractResponseDto result = service.getContract(created.id());
+        assertThat(result.id()).isEqualTo(created.id());
+        assertThat(result.name()).isEqualTo(CONTRACT_NAME);
     }
 
     @Test
     @Transactional
     void getContract_notFound() {
-        UUID id = UUID.randomUUID();
-        assertThatThrownBy(() -> service.getContract(id))
+        assertThatThrownBy(() -> service.getContract(CONTRACT_ID))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Contract not found with id: " + id);
+                .hasMessageContaining("Contract not found with id: " + CONTRACT_ID);
     }
 }

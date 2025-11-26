@@ -3,19 +3,14 @@ package ru.springtest.service;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.transaction.annotation.Transactional;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
 import ru.springtest.domain.Seller;
 import ru.springtest.dto.ItemDto;
 import ru.springtest.dto.SellerCreateUpdateDto;
 import ru.springtest.dto.SellerItemResponseDto;
 import ru.springtest.exception.NotFoundException;
 import ru.springtest.repository.SellerRepository;
-import ru.springtest.service.implementation.SellerServiceImplementation;
 
 import java.util.List;
 import java.util.UUID;
@@ -25,56 +20,51 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @Testcontainers
 @SpringBootTest
-class SellerServiceTest {
-
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14");
-
-    @ServiceConnection(name = "redis")
-    static GenericContainer<?> redis = new GenericContainer<>(DockerImageName.parse("redis:8.2.3"))
-            .withExposedPorts(6379);
+class SellerServiceTest extends AbstractIntegrationTest{
 
     @Autowired
-    SellerServiceImplementation service; // Или интерфейс SellerService
-
+    SellerService service;
     @Autowired
     SellerRepository sellerRepository;
+
+    static final UUID SELLER_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
+    static final String SELLER_NAME = "TestSeller";
+    static final String ITEM_NAME = "TestItem";
 
     @Test
     @Transactional
     void createSeller_success() {
         SellerCreateUpdateDto dto = new SellerCreateUpdateDto(
-                "TestSeller",
-                List.of(new ItemDto("TestItem"))
+                SELLER_NAME,
+                List.of(new ItemDto(ITEM_NAME))
         );
         SellerItemResponseDto result = service.createSeller(dto);
         assertThat(result.id()).isNotNull();
-        assertThat(result.name()).isEqualTo("TestSeller");
+        assertThat(result.name()).isEqualTo(SELLER_NAME);
         assertThat(result.item()).hasSize(1);
-        assertThat(result.item().get(0).name()).isEqualTo("TestItem");
+        assertThat(result.item().get(0).name()).isEqualTo(ITEM_NAME);
         Seller savedSeller = sellerRepository.findById(result.id()).orElseThrow();
-        assertThat(savedSeller.getName()).isEqualTo("TestSeller");
+        assertThat(savedSeller.getName()).isEqualTo(SELLER_NAME);
         assertThat(savedSeller.getItem()).hasSize(1);
-        assertThat(savedSeller.getItem().get(0).getName()).isEqualTo("TestItem");
+        assertThat(savedSeller.getItem().get(0).getName()).isEqualTo(ITEM_NAME);
     }
 
     @Test
     @Transactional
     void updateSeller_success() {
         SellerCreateUpdateDto createDto = new SellerCreateUpdateDto(
-                "TestSeller",
-                List.of(new ItemDto("TestItem"))
+                SELLER_NAME,
+                List.of(new ItemDto(ITEM_NAME))
         );
         SellerItemResponseDto created = service.createSeller(createDto);
-        UUID id = created.id();
         SellerCreateUpdateDto updateDto = new SellerCreateUpdateDto(
                 "UpdatedSeller",
                 List.of(new ItemDto("UpdatedItem"))
         );
-        SellerItemResponseDto result = service.updateSeller(id, updateDto);
-        assertThat(result.id()).isEqualTo(id);
+        SellerItemResponseDto result = service.updateSeller(created.id(), updateDto);
+        assertThat(result.id()).isEqualTo(created.id());
         assertThat(result.name()).isEqualTo("UpdatedSeller");
-        Seller updatedSeller = sellerRepository.findById(id).orElseThrow();
+        Seller updatedSeller = sellerRepository.findById(created.id()).orElseThrow();
         assertThat(updatedSeller.getName()).isEqualTo("UpdatedSeller");
         assertThat(updatedSeller.getItem()).hasSize(1);
         assertThat(updatedSeller.getItem().get(0).getName()).isEqualTo("UpdatedItem");
@@ -82,56 +72,51 @@ class SellerServiceTest {
 
     @Test
     void updateSeller_notFound() {
-        UUID id = UUID.randomUUID();
         SellerCreateUpdateDto dto = new SellerCreateUpdateDto(
-                "TestSeller",
-                List.of(new ItemDto("TestItem"))
+                SELLER_NAME,
+                List.of(new ItemDto(ITEM_NAME))
         );
-        assertThatThrownBy(() -> service.updateSeller(id, dto))
+        assertThatThrownBy(() -> service.updateSeller(SELLER_ID, dto))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Seller not found with id: " + id);
+                .hasMessageContaining("Seller not found with id: " + SELLER_ID);
     }
 
     @Test
     void getSeller_success() {
         SellerCreateUpdateDto dto = new SellerCreateUpdateDto(
-                "TestSeller",
-                List.of(new ItemDto("TestItem"))
+                SELLER_NAME,
+                List.of(new ItemDto(ITEM_NAME))
         );
         SellerItemResponseDto created = service.createSeller(dto);
-        UUID id = created.id();
-        SellerItemResponseDto result = service.getSeller(id);
-        assertThat(result.id()).isEqualTo(id);
-        assertThat(result.name()).isEqualTo("TestSeller");
+        SellerItemResponseDto result = service.getSeller(created.id());
+        assertThat(result.id()).isEqualTo(created.id());
+        assertThat(result.name()).isEqualTo(SELLER_NAME);
         assertThat(result.item()).hasSize(1);
     }
 
     @Test
     void getSeller_notFound() {
-        UUID id = UUID.randomUUID();
-        assertThatThrownBy(() -> service.getSeller(id))
+        assertThatThrownBy(() -> service.getSeller(SELLER_ID))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Seller not found with id: " + id);
+                .hasMessageContaining("Seller not found with id: " + SELLER_ID);
     }
 
     @Test
     @Transactional
     void deleteSeller_success() {
         SellerCreateUpdateDto dto = new SellerCreateUpdateDto(
-                "TestSeller",
-                List.of(new ItemDto("TestItem"))
+                SELLER_NAME,
+                List.of(new ItemDto(ITEM_NAME))
         );
         SellerItemResponseDto created = service.createSeller(dto);
-        UUID id = created.id();
-        service.deleteSeller(id);
-        assertThat(sellerRepository.findById(id)).isEmpty();
+        service.deleteSeller(created.id());
+        assertThat(sellerRepository.findById(created.id())).isEmpty();
     }
 
     @Test
     void deleteSeller_notFound() {
-        UUID id = UUID.randomUUID();
-        assertThatThrownBy(() -> service.deleteSeller(id))
+        assertThatThrownBy(() -> service.deleteSeller(SELLER_ID))
                 .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("Seller not found with id: " + id);
+                .hasMessageContaining("Seller not found with id: " + SELLER_ID);
     }
 }

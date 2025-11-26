@@ -4,12 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean; // 1. Используем MockBean
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import ru.springtest.dto.*;
-import ru.springtest.exception.NotFoundException; // Предположим, у тебя есть такое исключение
 import ru.springtest.exception.NotFoundException;
 import ru.springtest.service.ContractService;
 import ru.springtest.service.HistoryService;
@@ -19,11 +17,10 @@ import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(ContractHistoryController.class)
 class ContractHistoryControllerTest {
@@ -41,7 +38,7 @@ class ContractHistoryControllerTest {
     static final UUID CONTRACT_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174000");
     static final UUID HISTORY_ID = UUID.fromString("123e4567-e89b-12d3-a456-426614174001");
     static final String CONTRACT_NAME = "TestContract";
-    static final String HISTORY_NAME = "History1";
+    static final String HISTORY_NAME = "TestHistory";
 
     @Test
     void createContract_validRequest_returns201() throws Exception {
