@@ -18,12 +18,10 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@Testcontainers
-@SpringBootTest
 class ItemServiceTest extends AbstractIntegrationTest{
 
     @Autowired
-    ItemService service; // Или ItemService интерфейс
+    ItemService service;
     @Autowired
     ItemRepository itemRepository;
     @Autowired

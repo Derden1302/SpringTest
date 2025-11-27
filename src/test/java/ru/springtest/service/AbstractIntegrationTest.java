@@ -7,12 +7,11 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-@SpringBootTest // Общая конфигурация Spring Boot
+@SpringBootTest
 @Testcontainers
 public abstract class AbstractIntegrationTest {
 
     @ServiceConnection
-    // protected — чтобы было видно в наследниках, если понадобится
     protected static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14");
 
     @ServiceConnection(name = "redis")
