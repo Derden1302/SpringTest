@@ -24,10 +24,9 @@ public interface HistoryMapper {
 
     HistoryDto toDto(History history);
 
-    void changeHistory(@MappingTarget History history, HistoryCreateUpdateDto dto, List<Contract> contract);
-
     @Mapping(target = "contract", source = "contract")
-    default void changeHistory(@MappingTarget History history, List<Contract> contract) {
+    default void changeHistory(@MappingTarget History history, HistoryCreateUpdateDto dto, List<Contract> contract) {
+        history.setName(dto.name());
         history.setContract(contract);
     }
 

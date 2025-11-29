@@ -19,14 +19,13 @@ import java.util.UUID;
 @Service
 @RequiredArgsConstructor
 public class ItemServiceImplementation implements ItemService {
-    private final SellerService sellerService;
     private final ItemRepository itemRepository;
     private final ItemMapper mapper;
 
     @Transactional
     @Override
     public ItemDto updateItem(UUID id, ItemCreateUpdateDto dto) {
-        Item item = itemRepository.findById(id).orElseThrow(() -> new NotFoundException("Item not found!"));
+        Item item = itemRepository.findById(id).orElseThrow(() -> new NotFoundException("Item not found with id: " + id));
         mapper.changeItem(item, dto);
         return mapper.toDto(itemRepository.save(item));
     }

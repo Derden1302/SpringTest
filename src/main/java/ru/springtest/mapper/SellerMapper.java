@@ -22,10 +22,9 @@ public interface SellerMapper {
 
     Seller toEntity(SellerCreateUpdateDto dto, List<Item> item);
 
-    void changeSeller(@MappingTarget Seller seller, SellerCreateUpdateDto dto, List<Item> item);
-
     @Mapping(target = "item", source = "item")
-    default void changeSeller(@MappingTarget Seller seller, List<Item> item) {
+    default void changeSeller(@MappingTarget Seller seller, SellerCreateUpdateDto dto, List<Item> item) {
+        seller.setName(dto.name());
         seller.setItem(item);
     }
 }
